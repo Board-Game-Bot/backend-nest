@@ -30,6 +30,3 @@ jobs:
 
       - name: Build 📦
         run: pnpm build
-
-      - name: Run 🌠
-        run: pnpm start:prod
