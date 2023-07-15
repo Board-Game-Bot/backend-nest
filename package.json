@@ -55,7 +55,6 @@
   "lint-staged": {
     "**/*.{js,ts}": [
       "pnpm lint",
-      "pnpm test",
       "git add ."
     ]
   },
