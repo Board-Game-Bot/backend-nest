@@ -26,10 +26,10 @@ jobs:
           cache: 'pnpm'
 
       - name: Install Dependencies ⏬
-      - run: pnpm install
+        run: pnpm install
 
       - name: Build 📦
-      - run: pnpm build
+        run: pnpm build
 
       - name: Run 🌠
-      - run: pnpm start:prod
+        run: pnpm start:prod
