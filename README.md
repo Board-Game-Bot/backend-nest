@@ -11,3 +11,7 @@
 ## TodoList
 
 详情见 [issue](#)
+
+## 运行 TODO
+
+- 复制`.env.example.json`为`.env.json`并配置。
