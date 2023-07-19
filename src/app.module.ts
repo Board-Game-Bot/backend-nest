@@ -5,6 +5,8 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { fileLoader, TypedConfigModule } from 'nest-typed-config';
 import { AppConfig, schemeValidator } from '@/app.config';
 import { UserModule } from '@/modules/user/user.module';
+import { AuthModule } from '@/modules/auth/auth.module';
+import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -13,7 +15,6 @@ import { UserModule } from '@/modules/user/user.module';
       load: fileLoader(),
       validate: schemeValidator,
     }),
-    // TODO: Why useFactory, forRootAsync
     TypeOrmModule.forRootAsync({
       useFactory(config: AppConfig): TypeOrmModuleOptions {
         return {
@@ -25,7 +26,18 @@ import { UserModule } from '@/modules/user/user.module';
       },
       inject: [AppConfig],
     }),
+    JwtModule.registerAsync({
+      useFactory(config: AppConfig): JwtModuleOptions {
+        return {
+          ...config,
+          secret: config.jwt.secret,
+        };
+      },
+      inject: [AppConfig],
+      global: true,
+    }),
     UserModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
