@@ -22,5 +22,8 @@ jobs:
       - name: Install Dependencies ⏬
         run: pnpm install
 
+      - name: Build 📦
+        run: pnpm build
+
       - name: Copy Env Config
         run: cp ~/.env.json .
