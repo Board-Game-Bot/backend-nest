@@ -1,13 +1,19 @@
-export function makeFailure(data?: Record<string, any>) {
-  return {
-    status: 'failed',
-    data,
-  };
+import { HttpException, HttpStatus } from '@nestjs/common';
+
+export function makeFailure(message: string, data?: Record<string, any>) {
+  throw new HttpException(
+    {
+      statusCode: 4000,
+      message,
+      extra: data,
+    },
+    HttpStatus.BAD_REQUEST,
+  );
 }
 
 export function makeSuccess(data?: Record<string, any>) {
   return {
-    status: 'succeed',
+    statusCode: 200,
     data,
   };
 }

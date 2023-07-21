@@ -15,9 +15,7 @@ export class UserService {
     });
 
     if (!user) {
-      return makeFailure({
-        message: '查无此人',
-      });
+      return makeFailure('查无此人', {});
     }
 
     return makeSuccess({
