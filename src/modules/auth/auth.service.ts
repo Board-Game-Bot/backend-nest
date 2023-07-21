@@ -25,9 +25,7 @@ export class AuthService {
     });
 
     if (existAuth) {
-      return makeFailure({
-        message: '账户已存在，请更换',
-      });
+      return makeFailure('账户已存在，请更换', {});
     }
     // 创建账户
     // 密码哈希
@@ -63,18 +61,14 @@ export class AuthService {
     });
 
     if (!existAuth) {
-      return makeFailure({
-        message: '此用户不存在，检查账户是否正确',
-      });
+      return makeFailure('此用户不存在，检查账户是否正确', {});
     }
 
     // 验证密码是否一致
     const verifyResult = await verify(existAuth.passwd, passwd);
 
     if (!verifyResult) {
-      return makeFailure({
-        message: '密码错误，请重新输入',
-      });
+      return makeFailure('密码错误，请重新输入', {});
     }
 
     // 是否存在此用户
@@ -83,9 +77,7 @@ export class AuthService {
     });
 
     if (!user) {
-      return makeFailure({
-        message: '此用户不存在，可能已注销',
-      });
+      return makeFailure('此用户不存在，可能已注销', {});
     }
 
     // 成功，返回信息以及 JWT
