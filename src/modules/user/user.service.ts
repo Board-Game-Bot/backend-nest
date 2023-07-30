@@ -10,16 +10,16 @@ export class UserService {
   userDao: Repository<User>;
 
   async getProfile(id: string) {
-    const user = await this.userDao.findOneBy({
-      id,
-    });
+    try {
+      const user = await this.userDao.findOneByOrFail({
+        id,
+      });
 
-    if (!user) {
+      return makeSuccess({
+        user,
+      });
+    } catch (e) {
       return makeFailure('查无此人', {});
     }
-
-    return makeSuccess({
-      user,
-    });
   }
 }
