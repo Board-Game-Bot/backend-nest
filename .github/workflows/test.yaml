@@ -3,9 +3,8 @@ run-name: "${{ github.actor }} 启动了测试代码 🚀"
 
 on:
   push:
-
   pull_request:
-    types: [ opened, synchronize, reopened ]
+    types: [ synchronize ]
 
 jobs:
   Core-Action:
