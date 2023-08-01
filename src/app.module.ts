@@ -7,6 +7,9 @@ import { AppConfig, schemeValidator } from '@/app.config';
 import { UserModule } from '@/modules/user/user.module';
 import { AuthModule } from '@/modules/auth/auth.module';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
+import { GameModule } from '@/modules/game/game.module';
+import { RankModule } from '@/modules/rank/rank.module';
+import { RecordModule } from '@/modules/record/record.module';
 
 @Module({
   imports: [
@@ -38,6 +41,9 @@ import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
     }),
     UserModule,
     AuthModule,
+    GameModule,
+    RankModule,
+    RecordModule,
   ],
   controllers: [AppController],
   providers: [AppService],
