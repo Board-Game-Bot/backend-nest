@@ -1,6 +1,6 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { faker } from '@faker-js/faker';
-import { makeSuccess } from '@/utils';
+import { makeSuccess, sleep } from '@/utils';
 
 @Controller('/api/record')
 export class RecordController {
@@ -11,7 +11,7 @@ export class RecordController {
     @Query('size') size: number,
   ) {
     // TODO: implement me
-    console.log(id, index, size);
+    await sleep(1000);
     const records = Array.from({ length: size })
       .fill(0)
       .map(() => ({
