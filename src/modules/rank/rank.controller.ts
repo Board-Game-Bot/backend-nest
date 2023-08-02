@@ -1,12 +1,13 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { faker } from '@faker-js/faker';
-import { makeSuccess } from '@/utils';
+import { makeSuccess, sleep } from '@/utils';
 
 @Controller('/api/rank')
 export class RankController {
   @Get('/:id')
   async getByGameId(@Param('id') id: string) {
     // TODO: implement me
+    await sleep(1000);
     return makeSuccess({
       ranks: Array(10)
         .fill(0)
