@@ -27,4 +27,4 @@ jobs:
       - name: Upload files via SCP
         run: |
           scp -o StrictHostKeyChecking=no -P ${{ secrets.SERVER_PORT }} \
-          ./version ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:~/bgb-backend/
+          ./version ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:~/bgb-backend/
