@@ -2,28 +2,29 @@ name: 全流量部署
 run-name: "${{ github.actor }} 发起了全流量部署 🏗"
 
 on:
-  pull_request:
-    types: [ closed ]
-    branches: [ main ]
+  push:
+    branches:
+      - main
 
 jobs:
-  build:
-    runs-on: self-hosted
+  deploy:
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout 🛎️
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - name: Setup PNPM ✨
-        uses: pnpm/action-setup@v2
+      - name: Configure SSH
+        uses: webfactory/ssh-agent@v0.5.0
         with:
-          version: 8.6.2
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          
+      - name: Make version file
+        run: |
+          touch version \
+          cat ${{ github.sha }} >> version
 
-      - name: Install Dependencies ⏬
-        run: pnpm install
-
-      - name: Build 📦
-        run: pnpm build
-
-      - name: Copy Env Config
-        run: cp ~/.env.json .
+      - name: Upload files via SCP
+        run: |
+          scp -o StrictHostKeyChecking=no -P ${{ secrets.SERVER_PORT }} \
+          -r ./version ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:~/bgb-backend/
