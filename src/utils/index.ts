@@ -1,21 +1,11 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 
-export function makeFailure(message: string, data?: Record<string, any>) {
-  throw new HttpException(
-    {
-      statusCode: 4000,
-      message,
-      extra: data,
-    },
-    HttpStatus.BAD_REQUEST,
-  );
+export function makeFailure(message: string) {
+  throw new HttpException(message, HttpStatus.BAD_REQUEST);
 }
 
 export function makeSuccess(data?: Record<string, any>) {
-  return {
-    statusCode: 200,
-    data,
-  };
+  return data;
 }
 
 export async function sleep(ms: number) {

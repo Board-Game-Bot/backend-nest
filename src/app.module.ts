@@ -1,15 +1,16 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { fileLoader, TypedConfigModule } from 'nest-typed-config';
-import { AppConfig, schemeValidator } from '@/app.config';
-import { UserModule } from '@/modules/user/user.module';
-import { AuthModule } from '@/modules/auth/auth.module';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { GameModule } from '@/modules/game/game.module';
 import { RankModule } from '@/modules/rank/rank.module';
 import { RecordModule } from '@/modules/record/record.module';
+
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { AppConfig, schemeValidator } from './app.config';
+
+import { UserModule, AuthModule } from './modules';
 
 @Module({
   imports: [
