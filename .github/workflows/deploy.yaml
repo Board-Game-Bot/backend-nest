@@ -21,9 +21,8 @@ jobs:
           
       - name: Make version file
         run: |
-          echo "${{ github.sha }}" > bgb-be-version \
-          cat bgb-be-version
-
+          echo "${{ github.sha }}" > bgb-be-version
+      
       - name: Upload files via SCP
         run: |
           scp -o StrictHostKeyChecking=no -P ${{ secrets.SERVER_PORT }} \
