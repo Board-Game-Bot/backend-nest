@@ -22,7 +22,7 @@ jobs:
       - name: Make version file
         run: |
           touch version \
-          cat ${{ github.sha }} >> version
+          echo "${{ github.sha }}" >> version
 
       - name: Upload files via SCP
         run: |
