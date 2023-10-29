@@ -1,13 +1,12 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+/**
+ * 用户鉴权模块
+ */
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity()
 export class Auth {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn()
   id: string;
-
-  @Column()
-  account: string;
-
   @Column()
   passwd: string;
 }

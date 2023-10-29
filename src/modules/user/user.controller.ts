@@ -1,27 +1,30 @@
 import {
+  Body,
   Controller,
   Get,
   Inject,
-  UseGuards,
-  Request,
   Param,
+  Post,
+  UseGuards,
 } from '@nestjs/common';
-import { UserService } from '@/modules/user/user.service';
-import { AuthGuard } from '@/modules/auth/guard/auth.guard';
+import { AuthGuard } from '../auth/guard/auth.guard';
+import { UserService } from './user.service';
+import { UpdateDto } from './dtos';
+import { Jwt } from '@/common/decorators';
 
 @Controller('/api/user')
 export class UserController {
   @Inject()
   userService: UserService;
 
-  @UseGuards(AuthGuard)
-  @Get('/profile')
-  async getProfile(@Request() req) {
-    return await this.userService.getProfile(req.user.id);
+  @Get('/profile/:id')
+  async getProfile(@Param('id') id) {
+    return await this.userService.getProfile(id);
   }
 
-  @Get('/profile/:id')
-  async getProfileById(@Param('id') id: string) {
-    return await this.userService.getProfile(id);
+  @UseGuards(AuthGuard)
+  @Post('/update')
+  async updateProfile(@Jwt() jwt, @Body() dto: UpdateDto) {
+    return await this.userService.updateProfile(jwt.id, dto);
   }
 }

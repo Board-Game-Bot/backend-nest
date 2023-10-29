@@ -1,11 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { LoginDto, RegisterDto } from '@/modules/auth/dtos';
-import { Auth, User } from '@/entity';
-import { makeFailure, makeSuccess } from '@/utils';
-import { encrypt, verify } from '@/modules/auth/auth.utils';
 import { JwtService } from '@nestjs/jwt';
+
+import { encrypt, verify } from './utils';
+import { LoginDto, LoginVo, RegisterDto, RegisterVo } from './dtos';
+import { Auth, User } from '@/entity';
+import { makeFailure } from '@/utils';
 
 @Injectable()
 export class AuthService {
@@ -16,29 +17,29 @@ export class AuthService {
   @Inject()
   jwtService: JwtService;
 
-  async register(dto: RegisterDto) {
-    const { account, passwd, remember } = dto;
+  async register(dto: RegisterDto): Promise<RegisterVo> {
+    const { id, passwd, remember } = dto;
 
     // 验证账户是否已存在
     const existAuth = await this.authDao.findOneBy({
-      account,
+      id,
     });
 
     if (existAuth) {
-      return makeFailure('账户已存在，请更换', {});
+      makeFailure('账户已存在，请更换');
     }
     // 创建账户
     // 密码哈希
-    const _auth = await this.authDao.create({
+    await this.authDao.create({
       ...dto,
+      id,
       passwd: await encrypt(passwd),
     });
-    const auth = await this.authDao.save(_auth);
 
     // 创建用户
     const _user = await this.userDao.create({
-      id: auth.id,
-      name: auth.account,
+      id,
+      name: id,
       avatar: 'https://sdfsdf.dev/100x100.png',
     });
     const user = await this.userDao.save(_user);
@@ -47,28 +48,28 @@ export class AuthService {
     const jwt = this.signIn(user.id, remember === 'on');
 
     // 返回信息
-    return makeSuccess({
+    return {
       user,
       jwt,
-    });
+    };
   }
 
-  async login(dto: LoginDto) {
-    const { account, passwd, remember } = dto;
+  async login(dto: LoginDto): Promise<LoginVo> {
+    const { id, passwd, remember } = dto;
     // 查找是否存在这个账户
     const existAuth = await this.authDao.findOneBy({
-      account,
+      id,
     });
 
     if (!existAuth) {
-      return makeFailure('此用户不存在，检查账户是否正确', {});
+      makeFailure('此用户不存在，检查账户是否正确');
     }
 
     // 验证密码是否一致
     const verifyResult = await verify(existAuth.passwd, passwd);
 
     if (!verifyResult) {
-      return makeFailure('密码错误，请重新输入', {});
+      makeFailure('密码错误，请重新输入');
     }
 
     // 是否存在此用户
@@ -77,22 +78,19 @@ export class AuthService {
     });
 
     if (!user) {
-      return makeFailure('此用户不存在，可能已注销', {});
+      makeFailure('此用户不存在，可能已注销');
     }
 
     // 成功，返回信息以及 JWT
     const jwt = this.signIn(user.id, remember === 'on');
 
-    return makeSuccess({
+    return {
       user,
       jwt,
-    });
+    };
   }
 
   signIn(id: string, remember: boolean) {
-    return this.jwtService.sign(
-      { id },
-      { expiresIn: remember ? '14d' : '30s' },
-    );
+    return this.jwtService.sign({ id }, { expiresIn: remember ? '14d' : '1d' });
   }
 }

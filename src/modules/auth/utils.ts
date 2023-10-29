@@ -1,9 +1,11 @@
-import argon2 from 'argon2';
 import crypto from 'crypto';
+import argon2 from 'argon2';
 
 /**
- * 哈希化
+ *
  * @param passwd
+ * @desc 字符串哈希化
+ * @tutorial `const hashedPassword = await encrypt(passwd)`
  */
 export function encrypt(passwd: string) {
   const hash = crypto.createHash('sha256').update(passwd).digest('hex');
@@ -15,9 +17,11 @@ export function encrypt(passwd: string) {
 }
 
 /**
- * 验证
+ *
  * @param hashPasswd
  * @param passwd
+ * @desc 哈希验证
+ * @tutorial `if (await verify(hashPassword, passwd))`
  */
 export function verify(hashPasswd: string, passwd: string) {
   const hash = crypto.createHash('sha256').update(passwd).digest('hex');
