@@ -6,9 +6,9 @@ import { Entity, Column, PrimaryColumn } from 'typeorm';
 @Entity()
 export class User {
   @PrimaryColumn()
-  id: string;
+    id: string;
   @Column()
-  name: string;
+    name: string;
   @Column()
-  avatar: string;
+    avatar: string;
 }

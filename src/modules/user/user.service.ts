@@ -8,14 +8,15 @@ import { makeFailure } from '@/utils';
 @Injectable()
 export class UserService {
   @InjectRepository(User)
-  userDao: Repository<User>;
+    userDao: Repository<User>;
 
   async getProfile(id: string): Promise<User> {
     try {
       return await this.userDao.findOneByOrFail({
         id,
       });
-    } catch (e) {
+    }
+    catch (e) {
       makeFailure('查无此人');
     }
   }
@@ -26,7 +27,8 @@ export class UserService {
         ...data,
         id,
       });
-    } catch (e) {
+    }
+    catch (e) {
       console.log(e);
       makeFailure('修改失败，请重试');
     }

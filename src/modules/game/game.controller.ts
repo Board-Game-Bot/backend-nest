@@ -5,7 +5,7 @@ import { makeFailure, makeSuccess } from '@/utils';
 @Controller('/api/game')
 export class GameController {
   @Inject()
-  gameService: GameService;
+    gameService: GameService;
 
   @Get('/all')
   async getAll() {
@@ -13,7 +13,8 @@ export class GameController {
       return makeSuccess({
         games: await this.gameService.getAll(),
       });
-    } catch {
+    }
+    catch {
       return makeFailure('服务错误');
     }
   }
@@ -24,7 +25,8 @@ export class GameController {
       return makeSuccess({
         game: await this.gameService.getOne(id),
       });
-    } catch {
+    }
+    catch {
       return makeFailure(`不存在游戏${id}`);
     }
   }

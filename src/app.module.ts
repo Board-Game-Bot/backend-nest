@@ -2,15 +2,15 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { fileLoader, TypedConfigModule } from 'nest-typed-config';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
-import { GameModule } from '@/modules/game/game.module';
-import { RankModule } from '@/modules/rank/rank.module';
-import { RecordModule } from '@/modules/record/record.module';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AppConfig, schemeValidator } from './app.config';
 
 import { UserModule, AuthModule } from './modules';
+import { RecordModule } from '@/modules/record/record.module';
+import { RankModule } from '@/modules/rank/rank.module';
+import { GameModule } from '@/modules/game/game.module';
 
 @Module({
   imports: [

@@ -8,10 +8,10 @@ export class RegisterDto {
     message:
       '账号须满足大小写字母开头，并只能使用大小写字母、数字、下划线、小数点命名',
   })
-  id: string;
+    id: string;
   @IsString()
   @Length(6, 18, { message: '密码长度控制在6-18以内' })
-  passwd: string;
+    passwd: string;
   remember?: string;
 }
 

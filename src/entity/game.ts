@@ -3,20 +3,20 @@ import { Column, Entity, PrimaryColumn } from 'typeorm';
 @Entity()
 export class Game {
   @PrimaryColumn({ type: 'varchar' })
-  id: string;
+    id: string;
 
   @Column()
-  name: string;
+    name: string;
 
   @Column()
-  title: string;
+    title: string;
 
   @Column({ type: 'text' })
-  description: string;
+    description: string;
 
   @Column()
-  icon: string;
+    icon: string;
 
   @Column()
-  playerCount: number;
+    playerCount: number;
 }
