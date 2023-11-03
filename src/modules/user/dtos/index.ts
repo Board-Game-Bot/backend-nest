@@ -5,10 +5,10 @@ export class UpdateDto {
   @IsString()
   @Length(6, 18)
   @Matches(/^[a-zA-Z][a-zA-Z0-9_.]*$/)
-  name?: string;
+    name?: string;
   @IsOptional()
   @IsString()
-  avatar?: string;
+    avatar?: string;
 }
 
 export interface UpdateVo {}

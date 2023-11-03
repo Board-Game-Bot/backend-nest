@@ -5,7 +5,7 @@ import { AuthService } from '@/modules/auth/auth.service';
 @Controller('/api/auth')
 export class AuthController {
   @Inject()
-  authService: AuthService;
+    authService: AuthService;
 
   @Post('/register')
   async register(@Body() dto: RegisterDto) {

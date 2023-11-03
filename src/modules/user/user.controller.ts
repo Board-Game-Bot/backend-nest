@@ -11,11 +11,12 @@ import { AuthGuard } from '../auth/guard/auth.guard';
 import { UserService } from './user.service';
 import { UpdateDto } from './dtos';
 import { Jwt } from '@/common/decorators';
+import { JwtType } from '@/types';
 
 @Controller('/api/user')
 export class UserController {
   @Inject()
-  userService: UserService;
+    userService: UserService;
 
   @Get('/profile/:id')
   async getProfile(@Param('id') id) {
@@ -24,7 +25,7 @@ export class UserController {
 
   @UseGuards(AuthGuard)
   @Post('/update')
-  async updateProfile(@Jwt() jwt, @Body() dto: UpdateDto) {
+  async updateProfile(@Jwt() jwt: JwtType, @Body() dto: UpdateDto) {
     return await this.userService.updateProfile(jwt.id, dto);
   }
 }

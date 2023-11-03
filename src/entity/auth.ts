@@ -6,7 +6,7 @@ import { Column, Entity, PrimaryColumn } from 'typeorm';
 @Entity()
 export class Auth {
   @PrimaryColumn()
-  id: string;
+    id: string;
   @Column()
-  passwd: string;
+    passwd: string;
 }
