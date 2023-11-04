@@ -1,14 +1,13 @@
-import { OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { OnGatewayConnection, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { Inject, Injectable } from '@nestjs/common';
 
 @Injectable()
-@WebSocketGateway(
-  4567,
-  {
-    cors: { origin: '*' },
-  })
+@WebSocketGateway({
+  cors: { origin: '*' },
+  namespace: 'ws',
+})
 export class SocketGateway implements OnGatewayConnection {
   @WebSocketServer()
     server: Server;
