@@ -30,7 +30,7 @@ export class AuthService {
 
     // 创建账户
     // 密码哈希
-    await this.authDao.create({
+    await this.authDao.save({
       ...dto,
       id,
       passwd: await encrypt(passwd),

@@ -16,4 +16,7 @@ module.exports = {
     jest: true,
   },
   ignorePatterns: ['.eslintrc.js'],
+  rules: {
+    'no-empty': 'warn'
+  }
 };
