@@ -71,8 +71,8 @@ devDependencies:
     specifier: ^10.0.0
     version: 10.0.0(@nestjs/common@10.0.0)(@nestjs/core@10.0.0)(@nestjs/platform-express@10.0.0)
   '@soku-conf/eslint-config':
-    specifier: ^1.0.2
-    version: 1.0.2(typescript@5.1.3)
+    specifier: ^1.0.3
+    version: 1.0.3(typescript@5.1.3)
   '@types/express':
     specifier: ^4.17.17
     version: 4.17.17
@@ -115,6 +115,9 @@ devDependencies:
   lint-staged:
     specifier: ^13.2.3
     version: 13.2.3
+  nanoid:
+    specifier: '3'
+    version: 3.3.6
   source-map-support:
     specifier: ^0.5.21
     version: 0.5.21
@@ -1246,8 +1249,8 @@ packages:
   /@socket.io/component-emitter@3.1.0:
     resolution: {integrity: sha512-+9jVqKhRSpsc591z5vX+X5Yyw+he/HCB4iQ/RYxw35CEPaY1gnsNE43nf9n9AaYjAQrTiI/mOwKUKdUs9vf7Xg==}
 
-  /@soku-conf/eslint-config@1.0.2(typescript@5.1.3):
-    resolution: {integrity: sha512-eYOe7gogFC1Mvn+eJ6iHymD28FOCMjTRVkSYga4YLAX9ynnKFhQrVl3PFsBP9WJ7T8bJ6xl7vWPf6K9DbAvtmA==}
+  /@soku-conf/eslint-config@1.0.3(typescript@5.1.3):
+    resolution: {integrity: sha512-Wrbg2U07XUWVZqtPhTjBd8wA8iB+d/NnqBnfMkzRbvAFEpY9dukbCvLAgumJHjVqPDytDECvzMBauUJGKrUnKw==}
     dependencies:
       '@typescript-eslint/eslint-plugin': 6.9.1(@typescript-eslint/parser@6.9.1)(eslint@8.52.0)(typescript@5.1.3)
       '@typescript-eslint/parser': 6.9.1(eslint@8.52.0)(typescript@5.1.3)
@@ -1532,7 +1535,7 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@eslint-community/regexpp': 4.5.1
+      '@eslint-community/regexpp': 4.10.0
       '@typescript-eslint/parser': 6.9.1(eslint@8.52.0)(typescript@5.1.3)
       '@typescript-eslint/scope-manager': 6.9.1
       '@typescript-eslint/type-utils': 6.9.1(eslint@8.52.0)(typescript@5.1.3)
@@ -1751,7 +1754,7 @@ packages:
     engines: {node: ^16.0.0 || >=18.0.0}
     dependencies:
       '@typescript-eslint/types': 6.9.1
-      eslint-visitor-keys: 3.4.1
+      eslint-visitor-keys: 3.4.3
     dev: true
 
   /@ungap/structured-clone@1.2.0:
@@ -5190,6 +5193,12 @@ packages:
       object-assign: 4.1.1
       thenify-all: 1.6.0
     dev: false
+
+  /nanoid@3.3.6:
+    resolution: {integrity: sha512-BGcqMMJuToF7i1rt+2PWSNVnWIkGCU78jBG3RxO/bZlnZPK2Cmi2QaffxGO/2RvWi9sL+FAiRiXMgsyxQ1DIDA==}
+    engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
+    hasBin: true
+    dev: true
 
   /natural-compare-lite@1.4.0:
     resolution: {integrity: sha512-Tj+HTDSJJKaZnfiuw+iaF9skdPpTo2GtEly5JHnWV/hfv2Qj/9RKsGISQtLh2ox3l5EAGw487hnBee0sIJ6v2g==}
