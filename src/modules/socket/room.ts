@@ -10,10 +10,10 @@ import { GET_SOCKET_SERVER } from './constants';
  */
 export class Room {
   roomId: string;
-  gameId: number;
+  gameId: string;
   players: Player[];
 
-  constructor(gameId: number, candidates: Candidate[]) {
+  constructor(gameId: string, candidates: Candidate[]) {
     // 创建房间
     const roomId = nanoid();
     const players = candidates.map(candidate => {
@@ -83,6 +83,6 @@ export class Room {
 }
 
 // TODO 创建新的房间
-export function makeRoom(gameId: number, candidates: Candidate[]) {
+export function makeRoom(gameId: string, candidates: Candidate[]) {
   const room = new Room(gameId, candidates);
 }
