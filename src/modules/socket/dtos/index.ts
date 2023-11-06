@@ -1,12 +1,12 @@
 export interface JoinMatchReq {
-  gameId: number;
+  gameId: string;
   botId?: string;
 }
 
 export interface JoinMatchRes {}
 
 export interface LeaveMatchReq {
-  gameId: number;
+  gameId: string;
 }
 
 export interface LeaveMatchRes {}

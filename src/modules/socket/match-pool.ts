@@ -14,7 +14,7 @@ export interface Candidate {
 
 // 单例，一个全局匹配池
 // 参数意义从左到右依次为：游戏id、玩家id
-const MATCH_POOL: Record<number, Record<string, Candidate>> = {};
+const MATCH_POOL: Record<string, Record<string, Candidate>> = {};
 
 /**
  * 尝试把玩家加入到匹配池中，成功了就返回 true
@@ -25,7 +25,7 @@ const MATCH_POOL: Record<number, Record<string, Candidate>> = {};
  * @param socket
  */
 export function tryToAddPlayer(
-  gameId: number,
+  gameId: string,
   playerId: string,
   score: number,
   botId: string,
@@ -57,7 +57,7 @@ export function tryToAddPlayer(
  * @param playerId
  */
 export function tryToRemovePlayer(
-  gameId: number,
+  gameId: string,
   playerId: string,
 ): boolean {
   if (!MATCH_POOL[gameId])
@@ -120,7 +120,7 @@ function initMatchPool() {
           if (i >= playerCount) {
             const candidateSlice = candidates.slice(i - playerCount, i).map(x => x[1]);
             if (matchAlgo(candidateSlice)){
-              makeRoom(+gameId, candidateSlice);
+              makeRoom(gameId, candidateSlice);
               i -= playerCount;
               flag = true;
             }

@@ -103,7 +103,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * @todo 查找对应的分数，必须要有 gameId、playerId、botId
    * @todo 接入 Rating 表
    */
-  getScore(gameId: number, playerId: string, botId: string) {
+  getScore(gameId: string, playerId: string, botId: string) {
     return 1500 + Math.random() * 20 | 0;
   }
 }
