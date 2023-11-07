@@ -11,6 +11,7 @@ import { UserModule, AuthModule, SocketModule } from './modules';
 import { RecordModule } from '@/modules/record/record.module';
 import { RankModule } from '@/modules/rank/rank.module';
 import { GameModule } from '@/modules/game/game.module';
+import { BotModule } from '@/modules/bot/module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { GameModule } from '@/modules/game/game.module';
     UserModule,
     AuthModule,
     GameModule,
+    BotModule,
     RankModule,
     RecordModule,
     SocketModule,
