@@ -7,11 +7,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AppConfig, schemeValidator } from './app.config';
 
-import { UserModule, AuthModule, SocketModule } from './modules';
-import { GameModule } from '@/modules/game/game.module';
-import { RateModule } from '@/modules/rate/module';
-import { BotModule } from '@/modules/bot/module';
-import { TapeModule } from '@/modules/tape/module';
+import { UserModule, AuthModule, SocketModule, GameModule, RateModule, BotModule, TapeModule } from './modules';
 
 @Module({
   imports: [
