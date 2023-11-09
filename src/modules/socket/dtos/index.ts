@@ -32,3 +32,11 @@ export interface ChatRes {
   playerId: string;
   time: string;
 }
+
+export interface PrepareReq {
+  isPrepare: boolean;
+}
+
+export interface PrepareRes {
+  prepareStatus: boolean[];
+}

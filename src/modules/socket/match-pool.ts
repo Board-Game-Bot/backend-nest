@@ -120,6 +120,7 @@ function initMatchPool() {
           if (i >= playerCount) {
             const candidateSlice = candidates.slice(i - playerCount, i).map(x => x[1]);
             if (matchAlgo(candidateSlice)){
+              Math.random() <= .5 && candidateSlice.reverse();
               makeRoom(gameId, candidateSlice);
               i -= playerCount;
               flag = true;
