@@ -9,8 +9,12 @@ export class GameService {
     gameDao: Repository<Game>;
 
   async getAll() {
-    return {
-      games: await this.gameDao.find(),
-    };
+    return await this.gameDao.find();
+  }
+
+  async getOne(id: string) {
+    return await this.gameDao.findOneByOrFail({
+      id,
+    });
   }
 }
