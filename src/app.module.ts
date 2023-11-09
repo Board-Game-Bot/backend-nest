@@ -9,9 +9,8 @@ import { AppConfig, schemeValidator } from './app.config';
 
 import { UserModule, AuthModule, SocketModule } from './modules';
 import { RecordModule } from '@/modules/record/record.module';
+import { RankModule } from '@/modules/rank/rank.module';
 import { GameModule } from '@/modules/game/game.module';
-import { RateModule } from '@/modules/rate/module';
-import { BotModule } from '@/modules/bot/module';
 
 @Module({
   imports: [
@@ -44,8 +43,7 @@ import { BotModule } from '@/modules/bot/module';
     UserModule,
     AuthModule,
     GameModule,
-    RateModule,
-    BotModule,
+    RankModule,
     RecordModule,
     SocketModule,
   ],
