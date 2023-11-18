@@ -53,22 +53,17 @@ export function tryToAddPlayer(
 
 /**
  * 尝试把玩家从匹配池中拿走，成功了返回 true
- * @param gameId
  * @param playerId
  */
-export function tryToRemovePlayer(
-  gameId: string,
-  playerId: string,
-): boolean {
-  if (!MATCH_POOL[gameId])
-    return false;
-  const pool = MATCH_POOL[gameId];
-
-  delete pool[playerId];
-
-  displayMatchPool();
-
-  return true;
+export function tryToRemovePlayer(playerId: string): boolean {
+  for (const pool of Object.values(MATCH_POOL)) {
+    if (pool[playerId]) {
+      delete pool[playerId];
+      displayMatchPool();
+      return true;
+    }
+  }
+  return false;
 }
 
 // 匹配算法类型

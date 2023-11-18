@@ -1,8 +1,8 @@
 import { nanoid } from 'nanoid';
 import dayjs from 'dayjs';
-import { Candidate, tryToAddPlayer } from './match-pool';
+import { Candidate } from './match-pool';
 import { Player } from './clazz';
-import { ChatReq, ChatRes, LeaveRoomRes, MakeRoomRes, PrepareReq, PrepareRes } from './dtos';
+import { ChatReq, ChatRes, MakeRoomRes, PrepareReq, PrepareRes } from './dtos';
 import { GET_SOCKET_SERVER } from './constants';
 import { startGame } from './game-events';
 
@@ -63,7 +63,7 @@ export class Room {
 
       // 离开房间，解散
       const handleLeaveRoom = () => {
-        this.disbandBy(player);
+        this.emit('leave-room');
         mySocket.removeAllListeners('leave-room');
         mySocket.removeAllListeners('chat');
       };
@@ -78,36 +78,12 @@ export class Room {
    * @param event
    * @param message
    */
-  emit(event: string, message: any) {
+  emit(event: string, message?: any) {
     GET_SOCKET_SERVER()?.to(this.roomId).emit(event, message);
   }
 
   allPlayerOffEvent(event: string) {
     this.players.forEach(player => player.socket.removeAllListeners(event));
-  }
-
-  /**
-   * 某人退出房间，解散
-   * @param _player
-   */
-  disbandBy(_player: Player) {
-    this.players.forEach(player => {
-      const isMe = player === _player;
-      player.socket.emit('leave-room', { isMe } as LeaveRoomRes);
-
-      if (!isMe) {
-        const { playerId, score, botId, socket } = player;
-        const result = tryToAddPlayer(
-          this.gameId,
-          playerId,
-          score,
-          botId,
-          socket,
-        );
-        if (!result)
-          player.socket.emit('leave-match');
-      }
-    });
   }
 }
 
