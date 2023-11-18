@@ -19,9 +19,7 @@ export interface MakeRoomRes {
   roomId: string;
 }
 
-export interface LeaveRoomRes {
-  isMe: boolean;
-}
+export interface LeaveRoomRes {}
 
 export interface ChatReq {
   content: string;

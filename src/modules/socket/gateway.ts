@@ -46,7 +46,9 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   handleDisconnect(socket: Socket): any {
+    const client = this.clientMap.get(socket);
     this.clientMap.delete(socket);
+    tryToRemovePlayer(client.playerId);
   }
 
   /**
@@ -70,8 +72,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       socket,
     );
 
-    if (result)
-      return {};
+    result && socket.emit('join-match') ;
   }
 
   /**
@@ -84,12 +85,8 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() body: LeaveMatchReq,
     @ConnectedSocket() socket: Socket,
   ) {
-    const { gameId } = body;
     const client = this.clientMap.get(socket);
-    const result = tryToRemovePlayer(
-      gameId,
-      client.playerId,
-    );
+    const result = tryToRemovePlayer(client.playerId);
 
     if (result)
       socket.emit('leave-match');
