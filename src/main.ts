@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { useContainer } from 'class-validator';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import './soku-games';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -9,9 +10,7 @@ async function bootstrap() {
   app.enableCors();
 
   // 开启格式验证
-  useContainer(app.select(AppModule), {
-    fallbackOnErrors: true,
-  });
+  useContainer(app.select(AppModule), { fallbackOnErrors: true });
   app.useGlobalPipes(new ValidationPipe());
 
   // 开始监听

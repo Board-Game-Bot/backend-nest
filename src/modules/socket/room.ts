@@ -47,7 +47,7 @@ export class Room {
         prepareStatus[i] = body.isPrepare;
         this.emit('prepare', { prepareStatus } as PrepareRes);
         if (players.every((_, i) => prepareStatus[i])) {
-          startGame(this);
+          startGame(this, GET_SOCKET_SERVER());
           this.allPlayerOffEvent('prepare');
         }
       });
@@ -89,5 +89,5 @@ export class Room {
 
 // TODO 创建新的房间
 export function makeRoom(gameId: string, candidates: Candidate[]) {
-  const room = new Room(gameId, candidates);
+  new Room(gameId, candidates);
 }
