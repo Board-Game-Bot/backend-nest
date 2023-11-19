@@ -26,9 +26,5 @@ export function startGame(room: Room, server: Server) {
     ],
   });
   game.prepare(NewGenerator(gameId).generate());
-
-  setTimeout(() => {
-    game.start();
-  }, 16);
 }
 

@@ -60,11 +60,11 @@ dependencies:
     specifier: ^4.7.2
     version: 4.7.2
   soku-game-reversi:
-    specifier: ^1.2.4
-    version: 1.2.4
+    specifier: ^1.2.5
+    version: 1.2.5
   soku-game-snake:
-    specifier: ^1.2.1
-    version: 1.2.1
+    specifier: ^1.2.2
+    version: 1.2.2
   typeorm:
     specifier: ^0.3.17
     version: 0.3.17(pg@8.11.1)(ts-node@10.9.1)
@@ -6205,16 +6205,16 @@ packages:
       - supports-color
       - utf-8-validate
 
-  /soku-game-reversi@1.2.4:
-    resolution: {integrity: sha512-qyd4bZlVdUKJe2wjTGj4jzPuWatdIWOAKeglmlXbY1VW+8iNFf1/fZYrRyHcehEXYo5bAE33ZdH5/n2SLFXx/Q==}
+  /soku-game-reversi@1.2.5:
+    resolution: {integrity: sha512-zirGBOUabphxS5XXVMpfI16vLMu3P78ZH+hInmN8Yv0UAbT9S3U2qj9SOJajnaMM3/uzHTZpINeaH1/k40dVuQ==}
     dependencies:
       '@soku-games/core': 0.1.2
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
-  /soku-game-snake@1.2.1:
-    resolution: {integrity: sha512-CB0XE8T7gCjoTzeHbxGdjsB2BsLZiym3SPh25zc/X/tx8z66v1i+d4+tvhTemX0WhVxlPQ8tSTetXJ5OlM3iVg==}
+  /soku-game-snake@1.2.2:
+    resolution: {integrity: sha512-mvguJ1kOXgb3j4zJr9GfTSYncEwXSo3iGX2q/HcmmbOBJ7KJu8AOwkaeuWbl3DSMwIK4WeK8yTEEqz3SJN7vqw==}
     dependencies:
       '@soku-games/core': 0.1.2
       react: 18.2.0
