@@ -5,6 +5,7 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
+  "type": "commonjs",
   "scripts": {
     "prepare": "husky install",
     "build": "nest build",
@@ -28,7 +29,7 @@
     "@nestjs/platform-socket.io": "^10.2.8",
     "@nestjs/typeorm": "^10.0.0",
     "@nestjs/websockets": "^10.2.8",
-    "@soku-games/core": "^0.1.2",
+    "@soku-games/core": "^0.3.1",
     "argon2": "^0.30.3",
     "class-validator": "^0.14.0",
     "crypto": "^1.0.1",
@@ -39,8 +40,9 @@
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
     "socket.io": "^4.7.2",
-    "soku-game-reversi": "^1.2.5",
-    "soku-game-snake": "^1.2.2",
+    "soku-game-backgammon": "^0.2.3",
+    "soku-game-reversi": "^1.3.1",
+    "soku-game-snake": "^1.3.1",
     "typeorm": "^0.3.17"
   },
   "devDependencies": {
