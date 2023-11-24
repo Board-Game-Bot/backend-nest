@@ -1,10 +1,8 @@
 import { nanoid } from 'nanoid';
-import dayjs from 'dayjs';
-import { Candidate } from './match-pool';
 import { Player } from './clazz';
-import { ChatReq, ChatRes, MakeRoomRes, PrepareReq, PrepareRes } from './dtos';
 import { GET_SOCKET_SERVER } from './constants';
-import { startGame } from './game-events';
+import { Candidate } from './types';
+import { MakeRoomRes } from '@/modules/socket/dtos';
 
 /**
  * 房间，建立游戏用，也可以用来直播，直播的一个小群体的单位
@@ -23,53 +21,14 @@ export class Room {
     });
     Object.assign(this, { roomId, gameId, players });
 
-    // 加入房间
     players.forEach(player => player.socket.join(roomId));
 
-    // 通知房间内所有人房间里有哪些人
-    const message: MakeRoomRes = {
+    this.emit('make-room', <MakeRoomRes>{
       roomId,
       players: players.map(player => ({
         id: player.playerId,
         score: player.score,
       })),
-    };
-
-    this.emit('make-room', message);
-
-    // 游戏准备部分
-    const prepareStatus: boolean[] = Array.from({ length: players.length }, () => false);
-
-    players.forEach((player, i) => {
-      const mySocket = player.socket;
-      // 视作每个玩家
-      mySocket.on('prepare', (body: PrepareReq) => {
-        prepareStatus[i] = body.isPrepare;
-        this.emit('prepare', { prepareStatus } as PrepareRes);
-        if (players.every((_, i) => prepareStatus[i])) {
-          startGame(this, GET_SOCKET_SERVER());
-          this.allPlayerOffEvent('prepare');
-        }
-      });
-
-      // 聊天
-      mySocket.on('chat', (body: ChatReq) => {
-        mySocket.to(roomId).emit('chat', {
-          ...body,
-          time: dayjs().format('YYYY-MM-DD hh:mm'),
-          playerId: player.playerId,
-        } as ChatRes);
-      });
-
-      // 离开房间，解散
-      const handleLeaveRoom = () => {
-        this.emit('leave-room');
-        mySocket.removeAllListeners('leave-room');
-        mySocket.removeAllListeners('chat');
-      };
-      // 用户主动退出游戏、用户断开连接，都要触发
-      mySocket.on('leave-room', handleLeaveRoom);
-      mySocket.on('disconnect', handleLeaveRoom);
     });
   }
 
@@ -85,9 +44,4 @@ export class Room {
   allPlayerOffEvent(event: string) {
     this.players.forEach(player => player.socket.removeAllListeners(event));
   }
-}
-
-// TODO 创建新的房间
-export function makeRoom(gameId: string, candidates: Candidate[]) {
-  new Room(gameId, candidates);
 }

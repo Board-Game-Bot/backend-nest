@@ -10,9 +10,9 @@ import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { Inject, Injectable } from '@nestjs/common';
 import { JoinMatchReq, LeaveMatchReq } from './dtos';
-import { tryToAddPlayer, tryToRemovePlayer } from './match-pool';
 import { GET_SOCKET_SERVER, SET_SOCKET_SERVER } from './constants';
 import { Client } from './clazz';
+import { MatchPoolService } from './match-pool.service';
 
 @Injectable()
 @WebSocketGateway({
@@ -25,6 +25,9 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @Inject()
     jwtService: JwtService;
+
+  @Inject()
+    matchPoolService: MatchPoolService;
 
   clientMap: Map<Socket, Client> = new Map;
 
@@ -48,7 +51,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleDisconnect(socket: Socket): any {
     const client = this.clientMap.get(socket);
     this.clientMap.delete(socket);
-    tryToRemovePlayer(client.playerId);
+    this.matchPoolService.tryToRemovePlayer(client.playerId);
   }
 
   /**
@@ -64,7 +67,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const { gameId, botId } = body;
     const client = this.clientMap.get(socket);
     const score = this.getScore(gameId, client.playerId, botId);
-    const result = tryToAddPlayer(
+    const result = this.matchPoolService.tryToAddPlayer(
       gameId,
       client.playerId,
       score,
@@ -86,7 +89,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() socket: Socket,
   ) {
     const client = this.clientMap.get(socket);
-    const result = tryToRemovePlayer(client.playerId);
+    const result = this.matchPoolService.tryToRemovePlayer(client.playerId);
 
     if (result)
       socket.emit('leave-match');
