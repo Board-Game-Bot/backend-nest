@@ -13,6 +13,7 @@ import { JoinMatchReq, LeaveMatchReq } from './dtos';
 import { GET_SOCKET_SERVER, SET_SOCKET_SERVER } from './constants';
 import { Client } from './clazz';
 import { MatchPoolService } from './match-pool.service';
+import { RateService } from '@/modules/rate/service';
 
 @Injectable()
 @WebSocketGateway({
@@ -25,6 +26,9 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @Inject()
     jwtService: JwtService;
+
+  @Inject()
+    rateService: RateService;
 
   @Inject()
     matchPoolService: MatchPoolService;
@@ -60,17 +64,17 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * @param socket
    */
   @SubscribeMessage('join-match')
-  joinMatch(
+  async joinMatch(
     @MessageBody() body: JoinMatchReq,
     @ConnectedSocket() socket: Socket,
   ) {
     const { gameId, botId } = body;
     const client = this.clientMap.get(socket);
-    const score = this.getScore(gameId, client.playerId, botId);
+    const score = await this.getScore(gameId, client.playerId, botId);
     const result = this.matchPoolService.tryToAddPlayer(
       gameId,
       client.playerId,
-      score,
+      score.score,
       botId,
       socket,
     );
@@ -95,6 +99,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       socket.emit('leave-match');
   }
 
+
   /**
    * 获取分数
    * @param gameId
@@ -103,7 +108,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * @todo 查找对应的分数，必须要有 gameId、playerId、botId
    * @todo 接入 Rating 表
    */
-  getScore(gameId: string, playerId: string, botId: string) {
-    return 1500 + Math.random() * 20 | 0;
+  async getScore(gameId: string, playerId: string, botId: string) {
+    return await this.rateService.findRate(playerId, gameId, botId);
   }
 }

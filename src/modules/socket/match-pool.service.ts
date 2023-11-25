@@ -128,7 +128,7 @@ export class MatchPoolService {
               const candidateSlice = candidates.slice(i - playerCount, i).map(x => x[1]);
               if (matchAlgo(candidateSlice)){
                 Math.random() <= .5 && candidateSlice.reverse();
-                this.ROOM_SERVICE.makeRoom(gameId, candidateSlice);
+                this.ROOM_SERVICE.makeRoom(gameId, candidateSlice, 'match');
                 i -= playerCount;
                 flag = true;
               }

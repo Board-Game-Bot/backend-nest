@@ -15,3 +15,7 @@ export interface Candidate {
  * 匹配算法
  */
 export type MatchAlgo = (candidates: Candidate[]) => boolean;
+
+export type Mode =
+  | 'match'
+  | 'custom'

@@ -3,9 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Rate } from '@/entity/rate';
 
-/**
- * 基本上不会暴露给用户的业务
- */
 @Injectable()
 export class RateService {
   @InjectRepository(Rate)
@@ -26,7 +23,7 @@ export class RateService {
       return this.rateDao.save({
         userId,
         gameId,
-        botId,
+        botId: botId ?? 'person',
         score: 1500,
       });
     }
@@ -49,7 +46,7 @@ export class RateService {
     const foundRate = await this.rateDao.findOneBy({
       userId,
       gameId,
-      botId,
+      botId: botId ?? 'person',
     });
     if (foundRate)
       return foundRate;
@@ -84,7 +81,8 @@ export class RateService {
       await this.rateDao.update(rate, { score });
       return ;
     }
-    catch {
+    catch (e) {
+      console.log(e);
       throw new Error('update rate error');
     }
   }
@@ -104,7 +102,7 @@ export class RateService {
       await this.rateDao.delete({
         userId,
         gameId,
-        botId,
+        botId: botId ?? 'person',
       });
       return ;
     }

@@ -1,11 +1,15 @@
-import { buildGame, NewGenerator } from '@soku-games/core';
+import { buildGame, LifeCycle, NewGenerator } from '@soku-games/core';
 import { Server } from 'socket.io';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Room } from './room';
+import { Mode } from './types';
+import { RateService } from '@/modules/rate/service';
 
 @Injectable()
 export class GameService {
-  startGame(room: Room, server: Server) {
+  @Inject()
+    rateService: RateService;
+  startGame(room: Room, server: Server, mode: Mode) {
     room.emit('start-game');
     const { gameId, roomId } = room;
     const game = buildGame({
@@ -28,5 +32,21 @@ export class GameService {
       ],
     });
     game.prepare(NewGenerator(gameId).generate());
+
+    if (mode === 'match')
+      game.subscribe(LifeCycle.AFTER_END, (result: string) => {
+        '+x;-y';
+        const scores = result.split(';');
+        scores.forEach(async (score, i) => {
+          const player = room.players[i];
+          const newScore = player.score + 3 * parseInt(score);
+          try {
+            await this.rateService.updateRate(player.playerId, room.gameId, player.botId, newScore);
+          }
+          catch (e) {
+            console.log('error', e);
+          }
+        });
+      });
   }
 }
