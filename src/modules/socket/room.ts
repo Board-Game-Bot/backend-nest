@@ -1,10 +1,9 @@
 import { nanoid } from 'nanoid';
 import dayjs from 'dayjs';
-import { Candidate } from './match-pool';
 import { Player } from './clazz';
-import { ChatReq, ChatRes, MakeRoomRes, PrepareReq, PrepareRes } from './dtos';
 import { GET_SOCKET_SERVER } from './constants';
-import { startGame } from './game-events';
+import { Candidate, Mode } from './types';
+import { ChatReq, ChatRes, MakeRoomRes, PrepareReq, PrepareRes } from './dtos';
 
 /**
  * 房间，建立游戏用，也可以用来直播，直播的一个小群体的单位
@@ -14,7 +13,15 @@ export class Room {
   gameId: string;
   players: Player[];
 
-  constructor(gameId: string, candidates: Candidate[]) {
+  /**
+   * TODO callback 语义有点差
+   * @param gameId
+   * @param candidates
+   * @param mode
+   * @param callback
+   */
+
+  constructor(gameId: string, candidates: Candidate[], mode: Mode, callback?: () => void) {
     // 创建房间
     const roomId = nanoid();
     const players = candidates.map(candidate => {
@@ -23,32 +30,26 @@ export class Room {
     });
     Object.assign(this, { roomId, gameId, players });
 
-    // 加入房间
     players.forEach(player => player.socket.join(roomId));
 
-    // 通知房间内所有人房间里有哪些人
-    const message: MakeRoomRes = {
+    this.emit('make-room', <MakeRoomRes>{
       roomId,
       players: players.map(player => ({
         id: player.playerId,
         score: player.score,
       })),
-    };
+    });
 
-    this.emit('make-room', message);
-
-    // 游戏准备部分
-    const prepareStatus: boolean[] = Array.from({ length: players.length }, () => false);
+    const prepareStatus: boolean[] = players.map(() => false);
 
     players.forEach((player, i) => {
       const mySocket = player.socket;
-      // 视作每个玩家
+
       mySocket.on('prepare', (body: PrepareReq) => {
         prepareStatus[i] = body.isPrepare;
         this.emit('prepare', { prepareStatus } as PrepareRes);
         if (players.every((_, i) => prepareStatus[i])) {
-          startGame(this, GET_SOCKET_SERVER());
-          this.allPlayerOffEvent('prepare');
+          callback?.();
         }
       });
 
@@ -85,9 +86,4 @@ export class Room {
   allPlayerOffEvent(event: string) {
     this.players.forEach(player => player.socket.removeAllListeners(event));
   }
-}
-
-// TODO 创建新的房间
-export function makeRoom(gameId: string, candidates: Candidate[]) {
-  new Room(gameId, candidates);
 }
