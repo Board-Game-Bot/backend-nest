@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { CreateTapeDto, DeleteTapeDto, RequestMyTapeDto, RequestTapeDto } from './dtos';
+import { CreateTapeDto, DeleteTapeDto, RequestMyTapeDto, RequestTapeDto, UploadDto } from './dtos';
 import { Participant, Tape } from '@/entity';
 
 @Injectable()
@@ -12,6 +12,57 @@ export class TapeService {
     participantDao: Repository<Participant>;
 
   dataSource: DataSource;
+
+  async upload(userId: string, dto: UploadDto) {
+    try {
+      await this.tapeDao.insert({
+        userId,
+        ...dto,
+      });
+    }
+    catch (e) {
+      console.log('upload tape error: e.message');
+      throw new Error('upload tape error');
+    }
+  }
+
+  async get(userId: string, gameId: string, pageIndex: number, pageSize: number) {
+    try {
+      return {
+        tapes: await this.tapeDao.find({
+          select: {
+            id: true,
+            gameId: true,
+            uploadTime: true,
+          },
+          where: { userId, gameId },
+          order: {
+            uploadTime: 'DESC',
+          },
+          skip: pageIndex * pageSize,
+          take: pageSize,
+        }),
+      };
+    }
+    catch {
+      throw new Error('get tapes error');
+    }
+  }
+
+  async json(userId: string, tapeId: string) {
+    const result = await this.tapeDao.findOne({
+      relations: ['participant'],
+      select: {
+        participants: true,
+        json: true,
+      },
+      where: {
+        id: tapeId,
+        userId,
+      },
+    });
+    return result;
+  }
 
   async createTapeWithParticipants(dto: CreateTapeDto) {
     try {
@@ -63,11 +114,11 @@ export class TapeService {
     }
   }
 
-  async deleteTape(userId: string, dto: DeleteTapeDto) {
+  async delete(userId: string, tapeId: string) {
     try {
       await this.tapeDao.delete({
         userId,
-        id: dto.id,
+        id: tapeId,
       });
       return ;
     }
