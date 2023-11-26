@@ -2,85 +2,101 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { nanoid } from 'nanoid';
-import { CreateBotDto, DeleteBotDto, UpdateBotDto } from './dtos';
+import { CodeVo, CreateDto, CreateVo, GetVo, UpdateDto } from './dtos';
 import { Bot } from '@/entity';
-import { makeFailure } from '@/utils';
 
 @Injectable()
 export class BotService {
   @InjectRepository(Bot)
     botDao: Repository<Bot>;
 
-  async createBot(userId: string, dto: CreateBotDto) {
+  async create(userId: string, dto: CreateDto): Promise<CreateVo> {
     try {
+      const {
+        name = 'MyBot',
+        description = '作者很懒，没有任何简介。',
+      } = dto;
       return await this.botDao.save({
         id: nanoid(),
         userId,
         ...dto,
+        name,
+        description,
         isPublic: false,
       });
     }
     catch (e) {
-      makeFailure(e.message);
+      console.log('create bot error: ', e);
+      throw new Error('create bot error');
     }
   }
 
-  async requestBot(userId: string) {
+  async get(userId: string, pageIndex: number, pageSize: number): Promise<GetVo> {
     try {
-      const bots = await this.botDao.findBy({
-        userId,
+      const bots = await this.botDao.find({
+        select: {
+          code: false,
+        },
+        where: {
+          userId,
+        },
+        order: {
+          createTime: 'DESC',
+        },
+        skip: pageIndex * pageSize,
+        take: pageSize,
       });
       return {
         bots,
       };
     }
     catch (e) {
-      makeFailure(e.message);
+      console.log('get bot error: ', e);
+      throw new Error('get bot error');
     }
   }
 
-  async seeBot(userId: string) {
+  async code(userId: string, botId: string): Promise<CodeVo> {
     try {
-      const bots = await this.botDao.findBy({
-        userId,
-        isPublic: true,
+      return await this.botDao.findOne({
+        select: ['code'],
+        where: {
+          id: botId,
+          userId,
+        },
       });
-      return {
-        bots,
-      };
     }
     catch (e) {
-      makeFailure(e.message);
+      console.log('code bot error:', e);
+      throw new Error('code bot error');
     }
   }
 
-  async updateBot(userId: string, dto: UpdateBotDto) {
+  async update(userId: string, dto: UpdateDto): Promise<void> {
     try {
       await this.botDao.findOneByOrFail({
-        id: dto.botId,
+        id: dto.id,
         userId,
       });
-      await this.botDao.update(dto.botId, {
+      await this.botDao.update(dto.id, {
         ...dto,
       });
       return ;
     }
     catch (e) {
-      makeFailure(e.message);
+      console.log('update bot error: ', e);
+      throw new Error('update bot error');
     }
   }
 
-  async deleteBot(userId: string, dto: DeleteBotDto) {
+  async delete(userId: string, botId: string): Promise<void> {
     try {
-      await this.botDao.findOneByOrFail({
-        userId,
-        id: dto.botId,
-      });
-      await this.botDao.delete(dto.botId);
+      await this.botDao.delete(botId);
       return ;
     }
     catch (e) {
-      makeFailure(e.message);
+      console.log('delete bot error: ', e);
+      throw new Error('delete bot error');
     }
   }
 }

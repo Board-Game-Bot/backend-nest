@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Inject, Post, Query, UseGuards } from '@nestjs/common';
+import { CreateDto, DeleteDto, UpdateDto } from './dtos';
+import { BotService } from './service';
 import { AuthGuard } from '@/modules/auth/guard/auth.guard';
-import { CreateBotDto, DeleteBotDto, UpdateBotDto } from '@/modules/bot/dtos';
 import { Jwt } from '@/common/decorators';
 import { JwtType } from '@/types';
-import { BotService } from '@/modules/bot/service';
 
 @Controller('/api/bot')
 export class BotController {
@@ -12,30 +12,31 @@ export class BotController {
 
   @Post('/create')
   @UseGuards(AuthGuard)
-  async createBot(@Body() body: CreateBotDto, @Jwt() jwt: JwtType) {
-    return await this.botService.createBot(jwt.id, body);
+  async create(@Body() body: CreateDto, @Jwt() jwt: JwtType) {
+    return await this.botService.create(jwt.id, body);
   }
 
-  @Get('/request')
+  @Get('/get')
   @UseGuards(AuthGuard)
-  async requestBot(@Jwt() jwt: JwtType) {
-    return await this.botService.requestBot(jwt.id);
+  async get(@Jwt() jwt: JwtType, @Query('pageIndex') pageIndex: number, @Query('pageSize') pageSize: number) {
+    return await this.botService.get(jwt.id, pageIndex, pageSize);
   }
 
-  @Get('/see')
-  async seeBot(@Query('userId') userId: string) {
-    return await this.botService.seeBot(userId);
+  @Get('/code')
+  @UseGuards(AuthGuard)
+  async code(@Jwt() jwt: JwtType, @Query('botId') botId: string) {
+    return await this.botService.code(jwt.id, botId);
   }
 
   @Post('/update')
   @UseGuards(AuthGuard)
-  async updateBot(@Body() body: UpdateBotDto, @Jwt() jwt: JwtType) {
-    return await this.botService.updateBot(jwt.id, body);
+  async update(@Jwt() jwt: JwtType, @Body() body: UpdateDto) {
+    return await this.botService.update(jwt.id, body);
   }
 
   @Post('/delete')
   @UseGuards(AuthGuard)
-  async deleteBot(@Body() body: DeleteBotDto, @Jwt() jwt: JwtType) {
-    return await this.botService.deleteBot(jwt.id, body);
+  async delete(@Jwt() jwt: JwtType, @Body() body: DeleteDto) {
+    return await this.botService.delete(jwt.id, body.botId);
   }
 }
