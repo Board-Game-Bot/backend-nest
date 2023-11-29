@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Query } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Rate } from '@/entity/rate';
@@ -10,6 +10,31 @@ import { Rate } from '@/entity/rate';
 export class RateService {
   @InjectRepository(Rate)
     rateDao: Repository<Rate>;
+
+  async get(
+    @Query('gameId') gameId: string,
+    @Query('pageIndex') pageIndex: number,
+    @Query('pageSize') pageSize: number,
+  ) {
+    try {
+      return {
+        rates: await this.rateDao.find({
+          where: {
+            gameId,
+          },
+          order: {
+            score: 'DESC',
+          },
+          skip: pageIndex * pageSize,
+          take: pageSize,
+        }),
+      };
+    }
+    catch (e) {
+      console.log(e);
+      throw new Error('get rates error.');
+    }
+  }
 
   /**
    * 创建
