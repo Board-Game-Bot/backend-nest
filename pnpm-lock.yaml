@@ -60,14 +60,14 @@ dependencies:
     specifier: ^4.7.2
     version: 4.7.2
   soku-game-backgammon:
-    specifier: ^0.3.4
-    version: 0.3.4(@soku-games/core@0.3.1)
+    specifier: ^0.3.5
+    version: 0.3.5(@soku-games/core@0.3.1)
   soku-game-reversi:
     specifier: ^1.4.2
     version: 1.4.2
   soku-game-snake:
-    specifier: ^1.4.0
-    version: 1.4.0
+    specifier: ^1.4.1
+    version: 1.4.1
   typeorm:
     specifier: ^0.3.17
     version: 0.3.17(pg@8.11.1)(ts-node@10.9.1)
@@ -6221,8 +6221,8 @@ packages:
       - supports-color
       - utf-8-validate
 
-  /soku-game-backgammon@0.3.4(@soku-games/core@0.3.1):
-    resolution: {integrity: sha512-pAaZ8ivVcVpvSG8Pm25cvulCPcJXK0njkx5bS3QaWvv/9bYEJyu7FZod3eJwbGsuORNAUUWBI2q8VTCpDF1cZw==}
+  /soku-game-backgammon@0.3.5(@soku-games/core@0.3.1):
+    resolution: {integrity: sha512-3UjYJSAO48ZHZKyKtCaXZb7RIhER3HWPI+/CCUzZ598wHHydnsrURHZdOuBXiDQjUX5Hv+tazw5KhOa00mG7Qw==}
     peerDependencies:
       '@soku-games/core': ^0.3.1
     dependencies:
@@ -6239,8 +6239,8 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
-  /soku-game-snake@1.4.0:
-    resolution: {integrity: sha512-IwH3NvfT/3eEeCnW+P30sd9H/rjo3n4icvIJ9eiojmkBIV+9+eXOUdmkA/iHk9MqDfAuc7eCvBZuTYIyEzoBBg==}
+  /soku-game-snake@1.4.1:
+    resolution: {integrity: sha512-+wE3/h/Fv+8VifHheIr6Sq9cnyB2nEsStsJ6Ix11LgBRIeNT7rhBP9SGoKzau5zdACaot0XeybZoZ1sCFwtqGA==}
     dependencies:
       '@soku-games/core': 0.3.1
       react: 18.2.0
