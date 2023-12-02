@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Inject, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Inject, ParseIntPipe, Post, Query, UseGuards } from '@nestjs/common';
 import { TapeService } from './service';
 import { DeleteDto, UploadDto, UploadVo } from './dtos';
 import { AuthGuard } from '@/modules/auth/guard/auth.guard';
@@ -15,8 +15,8 @@ export class TapeController {
   async get(
     @Jwt() jwt: JwtType,
     @Query('gameId') gameId: string,
-    @Query('pageIndex') pageIndex: number,
-    @Query('pageSize') pageSize: number,
+    @Query('pageIndex', ParseIntPipe) pageIndex: number,
+    @Query('pageSize', ParseIntPipe) pageSize: number,
   ) {
     return await this.tapeService.get(jwt.id, gameId, pageIndex, pageSize);
   }
