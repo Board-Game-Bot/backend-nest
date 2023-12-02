@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { CreateTapeDto, DeleteTapeDto, RequestMyTapeDto, RequestTapeDto, UploadDto } from './dtos';
+import { nanoid } from 'nanoid';
+import { CreateTapeDto, RequestMyTapeDto, RequestTapeDto, UploadDto } from './dtos';
 import { Participant, Tape } from '@/entity';
 
 @Injectable()
@@ -15,13 +16,14 @@ export class TapeService {
 
   async upload(userId: string, dto: UploadDto) {
     try {
-      await this.tapeDao.insert({
-        userId,
+      await this.tapeDao.save({
+        id: nanoid(),
         ...dto,
+        uploadTime: new Date(),
+        userId,
       });
     }
-    catch (e) {
-      console.log('upload tape error: e.message');
+    catch {
       throw new Error('upload tape error');
     }
   }
@@ -51,9 +53,7 @@ export class TapeService {
 
   async json(userId: string, tapeId: string) {
     const result = await this.tapeDao.findOne({
-      relations: ['participant'],
       select: {
-        participants: true,
         json: true,
       },
       where: {
