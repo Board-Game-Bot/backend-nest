@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { nanoid } from 'nanoid';
 import { CodeVo, CreateDto, CreateVo, GetVo, UpdateDto } from './dtos';
 import { Bot } from '@/entity';
+import { API, makeFailure } from '@/utils';
 
 @Injectable()
 export class BotService {
@@ -11,23 +12,38 @@ export class BotService {
     botDao: Repository<Bot>;
 
   async create(userId: string, dto: CreateDto): Promise<CreateVo> {
+    let containerId: string;
     try {
-      const {
-        name = 'MyBot',
-        description = '作者很懒，没有任何简介。',
-      } = dto;
+      containerId = (await API.post('/create', {
+        lang: dto.langId,
+        code: dto.code,
+      })).data.containerId;
+      const message = (await API.post('/compile', {
+        containerId,
+      })).data.message;
+      if (message) {
+        throw new Error(message);
+      }
+
+      const { name, description } = dto;
       return await this.botDao.save({
         id: nanoid(),
         userId,
         ...dto,
-        name,
-        description,
+        name: name || 'MyBot',
+        description: description || '作者很懒，没有任何简介。',
         isPublic: false,
       });
     }
     catch (e) {
-      console.log('create bot error: ', e);
-      throw new Error('create bot error');
+      console.log('create bot error: ', e.message);
+      makeFailure(e.message);
+    }
+    finally {
+      if (containerId)
+        await API.post('/stop', {
+          containerId,
+        });
     }
   }
 
