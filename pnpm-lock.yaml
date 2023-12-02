@@ -66,8 +66,8 @@ dependencies:
     specifier: ^1.4.2
     version: 1.4.2
   soku-game-snake:
-    specifier: ^1.4.1
-    version: 1.4.1
+    specifier: ^1.4.3
+    version: 1.4.3
   typeorm:
     specifier: ^0.3.17
     version: 0.3.17(pg@8.11.1)(ts-node@10.9.1)
@@ -6239,8 +6239,8 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
-  /soku-game-snake@1.4.1:
-    resolution: {integrity: sha512-+wE3/h/Fv+8VifHheIr6Sq9cnyB2nEsStsJ6Ix11LgBRIeNT7rhBP9SGoKzau5zdACaot0XeybZoZ1sCFwtqGA==}
+  /soku-game-snake@1.4.3:
+    resolution: {integrity: sha512-eogoCkO/dum/bMF2J7F6SV2bHbR8CFOh0/2uQ7eoVzxToNqh0ElJAmmD3fHoTsX1znJzT/BeJZTJVahsfWGwyA==}
     dependencies:
       '@soku-games/core': 0.3.1
       react: 18.2.0
