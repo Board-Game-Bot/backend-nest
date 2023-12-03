@@ -22,6 +22,14 @@ export class BotController {
     return await this.botService.get(jwt.id, pageIndex, pageSize);
   }
 
+  @Get('/game')
+  @UseGuards(AuthGuard)
+  async game(@Jwt() jwt: JwtType, @Query('gameId') gameId: string) {
+    return {
+      bots: await this.botService.game(jwt.id, gameId),
+    };
+  }
+
   @Get('/code')
   @UseGuards(AuthGuard)
   async code(@Jwt() jwt: JwtType, @Query('botId') botId: string) {

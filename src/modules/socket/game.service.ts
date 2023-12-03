@@ -4,14 +4,28 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Room } from './room';
 import { Mode } from './types';
 import { RateService } from '@/modules/rate/service';
+import { BotService } from '@/modules/bot/service';
 
 @Injectable()
 export class GameService {
   @Inject()
     rateService: RateService;
-  startGame(room: Room, server: Server, mode: Mode) {
+  @Inject()
+    botService: BotService;
+
+  async startGame(room: Room, server: Server, mode: Mode) {
     room.emit('start-game');
     const { gameId, roomId } = room;
+
+    const bots = await Promise.all(
+      room.players.map(async ({ botId }) => {
+        if (botId) {
+          return await this.botService.getOne(botId);
+        }
+        return null;
+      }),
+    );
+
     const game = buildGame({
       name: gameId,
       plugins: [
@@ -19,7 +33,8 @@ export class GameService {
         {
           name: 'network-server-controller',
           extra: {
-            sockets: room.players.map(p => p.socket),
+            players: room.players,
+            bots,
           },
         },
         {
