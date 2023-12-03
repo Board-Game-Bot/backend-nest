@@ -3,11 +3,6 @@ import { Injectable } from '@nestjs/common';
 import { Candidate, MatchAlgo } from './types';
 import { RoomService } from '@/modules/socket/room.service';
 
-/**
- * 单例，一个全局匹配池
- *
- * 参数意义从左到右依次为：游戏id、玩家id
- */
 const MATCH_POOL: Record<string, Record<string, Candidate>> = {};
 const MATCH_ALGO_MAP: Record<number, MatchAlgo> = {};
 const COMMON_MATCH_ALGO = (candidates: Candidate[]) => {
@@ -16,15 +11,10 @@ const COMMON_MATCH_ALGO = (candidates: Candidate[]) => {
 
   return diff <= acceptDiff;
 };
-/**
- * 用来维护不同游戏的不同人数
- */
+
 const PLAYER_COUNT_MAP: Record<number, number> = {};
 const COMMON_PLAYER_COUNT = 2;
 
-/**
- * 显示匹配池
- */
 function DISPLAY_MATCH_POOL() {
   const pool = Object.entries(MATCH_POOL)
     .reduce(
@@ -47,14 +37,6 @@ export class MatchPoolService {
     MatchPoolService.ROOM_SERVICE = roomService;
   }
 
-  /**
-   * 尝试把玩家加入到匹配池中，成功了就返回 true
-   * @param gameId
-   * @param playerId
-   * @param score
-   * @param botId
-   * @param socket
-   */
   tryToAddPlayer(
     gameId: string,
     playerId: string,
@@ -99,10 +81,7 @@ export class MatchPoolService {
 
   static TIMER: NodeJS.Timer;
 
-  /**
-   * 初始化，运行匹配池
-   * @fixme 可能不是一个好的计时器，后续可能会使用其他的方案？
-   */
+  // FIXME 可能不是一个好的计时器，后续可能会使用其他的方案
   static INIT_MATCH_POOL() {
     MatchPoolService.TIMER = setInterval(() => {
       oneCycle();
@@ -123,7 +102,6 @@ export class MatchPoolService {
 
           const newCandidateMap: Record<string, Candidate> = {};
           for (let i = N; i > 0; --i)
-            // 一群人
             if (i >= playerCount) {
               const candidateSlice = candidates.slice(i - playerCount, i).map(x => x[1]);
               if (matchAlgo(candidateSlice)){
@@ -155,10 +133,6 @@ export class MatchPoolService {
     };
   }
 
-
-  /**
-   * 停止匹配池运作
-   */
   static STOP_TIMER() {
     clearInterval(MatchPoolService.TIMER);
   }

@@ -13,3 +13,4 @@ export async function sleep(ms: number) {
 }
 
 export * from './request';
+export * from './checkBotCompile';

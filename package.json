@@ -29,7 +29,7 @@
     "@nestjs/platform-socket.io": "^10.2.8",
     "@nestjs/typeorm": "^10.0.0",
     "@nestjs/websockets": "^10.2.8",
-    "@soku-games/core": "^0.3.1",
+    "@soku-games/core": "^0.4.1",
     "argon2": "^0.30.3",
     "axios": "^1.6.2",
     "class-validator": "^0.14.0",
@@ -41,9 +41,9 @@
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
     "socket.io": "^4.7.2",
-    "soku-game-backgammon": "^0.3.5",
-    "soku-game-reversi": "^1.4.2",
-    "soku-game-snake": "^1.4.3",
+    "soku-game-backgammon": "^0.4.0",
+    "soku-game-reversi": "^1.5.2",
+    "soku-game-snake": "^1.6.1",
     "typeorm": "^0.3.17"
   },
   "devDependencies": {

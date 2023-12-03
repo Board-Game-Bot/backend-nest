@@ -58,11 +58,6 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.matchPoolService.tryToRemovePlayer(client.playerId);
   }
 
-  /**
-   * 加入匹配
-   * @param body
-   * @param socket
-   */
   @SubscribeMessage('join-match')
   async joinMatch(
     @MessageBody() body: JoinMatchReq,
@@ -82,11 +77,6 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     result && socket.emit('join-match') ;
   }
 
-  /**
-   * 退出匹配
-   * @param body
-   * @param socket
-   */
   @SubscribeMessage('leave-match')
   leaveMatch(
     @MessageBody() body: LeaveMatchReq,
@@ -99,15 +89,6 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       socket.emit('leave-match');
   }
 
-
-  /**
-   * 获取分数
-   * @param gameId
-   * @param playerId
-   * @param botId
-   * @todo 查找对应的分数，必须要有 gameId、playerId、botId
-   * @todo 接入 Rating 表
-   */
   async getScore(gameId: string, playerId: string, botId: string) {
     return await this.rateService.findRate(playerId, gameId, botId);
   }

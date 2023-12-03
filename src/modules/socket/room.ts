@@ -37,6 +37,7 @@ export class Room {
       players: players.map(player => ({
         id: player.playerId,
         score: player.score,
+        botId: player.botId,
       })),
     });
 

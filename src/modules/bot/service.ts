@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { nanoid } from 'nanoid';
 import { CodeVo, CreateDto, CreateVo, GetVo, UpdateDto } from './dtos';
 import { Bot } from '@/entity';
-import { API, makeFailure } from '@/utils';
+import { API, checkBotCompile, makeFailure } from '@/utils';
 
 @Injectable()
 export class BotService {
@@ -12,18 +12,10 @@ export class BotService {
     botDao: Repository<Bot>;
 
   async create(userId: string, dto: CreateDto): Promise<CreateVo> {
-    let containerId: string;
     try {
-      containerId = (await API.post('/create', {
-        lang: dto.langId,
-        code: dto.code,
-      })).data.containerId;
-      const message = (await API.post('/compile', {
-        containerId,
-      })).data.message;
-      if (message) {
-        throw new Error(message);
-      }
+      const [containerId, message] = await checkBotCompile(dto.langId, dto.code);
+      if (message) throw new Error(message);
+      API.post('/stop', { containerId });
 
       const { name, description } = dto;
       return await this.botDao.save({
@@ -39,12 +31,10 @@ export class BotService {
       console.log('create bot error: ', e.message);
       makeFailure(e.message);
     }
-    finally {
-      if (containerId)
-        await API.post('/stop', {
-          containerId,
-        });
-    }
+  }
+
+  async getOne(botId: string) {
+    return await this.botDao.findOneBy({ id: botId });
   }
 
   async get(userId: string, pageIndex: number, pageSize: number): Promise<GetVo> {
@@ -72,6 +62,13 @@ export class BotService {
     }
   }
 
+  async game(userId: string, gameId: string) {
+    return await this.botDao.findBy({
+      userId,
+      gameId,
+    });
+  }
+
   async code(userId: string, botId: string): Promise<CodeVo> {
     try {
       return await this.botDao.findOne({
@@ -90,10 +87,14 @@ export class BotService {
 
   async update(userId: string, dto: UpdateDto): Promise<void> {
     try {
-      await this.botDao.findOneByOrFail({
+      const bot = await this.botDao.findOneByOrFail({
         id: dto.id,
         userId,
       });
+      if (dto.code) {
+        const [, message] = await checkBotCompile(bot.langId, bot.code);
+        if (message) throw new Error(message);
+      }
       await this.botDao.update(dto.id, {
         ...dto,
       });
@@ -101,14 +102,16 @@ export class BotService {
     }
     catch (e) {
       console.log('update bot error: ', e);
-      throw new Error('update bot error');
+      makeFailure('update bot error');
     }
   }
 
   async delete(userId: string, botId: string): Promise<void> {
     try {
+      if (!await this.botDao.findBy({ id: botId, userId }))
+        return;
       await this.botDao.delete(botId);
-      return ;
+      return;
     }
     catch (e) {
       console.log('delete bot error: ', e);
