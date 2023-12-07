@@ -63,14 +63,14 @@ dependencies:
     specifier: ^4.7.2
     version: 4.7.2
   soku-game-backgammon:
-    specifier: ^0.4.0
-    version: 0.4.0(@soku-games/core@0.4.1)
+    specifier: ^0.5.2
+    version: 0.5.2(@soku-games/core@0.4.1)
   soku-game-reversi:
-    specifier: ^1.5.2
-    version: 1.5.2
+    specifier: ^1.6.2
+    version: 1.6.2(@soku-games/core@0.4.1)
   soku-game-snake:
-    specifier: ^1.6.1
-    version: 1.6.1
+    specifier: ^1.7.6
+    version: 1.7.6(@soku-games/core@0.4.1)
   typeorm:
     specifier: ^0.3.17
     version: 0.3.17(pg@8.11.1)(ts-node@10.9.1)
@@ -6230,8 +6230,8 @@ packages:
       - supports-color
       - utf-8-validate
 
-  /soku-game-backgammon@0.4.0(@soku-games/core@0.4.1):
-    resolution: {integrity: sha512-3o54Lt2i9XjX23J41pNoKtPmAzqzHKq+BC2VOV4BgiIT61T9SkOwnAzqgGhEYJZHBYpRoYbhW8aT2CAS3vtWjQ==}
+  /soku-game-backgammon@0.5.2(@soku-games/core@0.4.1):
+    resolution: {integrity: sha512-undgXK1Lo2R8WPcS45fbBU80LQ2azn/fRqk92nE1SGGNCc9ygPaEBcbm96EEfgRg6aExhX2hDFzKE9GpUNVtdA==}
     peerDependencies:
       '@soku-games/core': ^0.3.1
     dependencies:
@@ -6240,16 +6240,20 @@ packages:
       solid-js: 1.8.6
     dev: false
 
-  /soku-game-reversi@1.5.2:
-    resolution: {integrity: sha512-Ut1vFbKE0N+P1wIg3Zv3LN9IANTFisxBfJXiFYlSTRcTMc/1ravjqCrCWVKCh0DONME332ITx2FrUpbKt9ZBBw==}
+  /soku-game-reversi@1.6.2(@soku-games/core@0.4.1):
+    resolution: {integrity: sha512-0eIbyDqOXFNFMG73dAck5wJXxdQQ5NLvp5tBxqGKuVSc5E/19ae7GhpOtqInJDXMWbhwD0jZqG0LH93EHwwKew==}
+    peerDependencies:
+      '@soku-games/core': latest
     dependencies:
       '@soku-games/core': 0.4.1
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
-  /soku-game-snake@1.6.1:
-    resolution: {integrity: sha512-B5pSuW0op0HtUYRzrzEk2i8Fkc/Bi8sKcYG9511lnkmQOYNJrTaQl0Q9UPiLej7ecqrBcB1WWlAoa9fUpTaVJg==}
+  /soku-game-snake@1.7.6(@soku-games/core@0.4.1):
+    resolution: {integrity: sha512-WZSUGj8T+s8QXR/xHc/Xb+AqFr1XMe8DfhoL7BDnpZxVEod1QB+R/hCLs25vbS4NOwee+UOFNFHUHEQa25J3Jw==}
+    peerDependencies:
+      '@soku-games/core': latest
     dependencies:
       '@soku-games/core': 0.4.1
       react: 18.2.0

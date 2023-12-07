@@ -41,9 +41,9 @@
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
     "socket.io": "^4.7.2",
-    "soku-game-backgammon": "^0.4.0",
-    "soku-game-reversi": "^1.5.2",
-    "soku-game-snake": "^1.6.1",
+    "soku-game-backgammon": "^0.5.2",
+    "soku-game-reversi": "^1.6.2",
+    "soku-game-snake": "^1.7.6",
     "typeorm": "^0.3.17"
   },
   "devDependencies": {
