@@ -1,3 +1,3 @@
 #!/bin/sh
 
-pnpm i @soku-games/core@latest
+# pnpm i @soku-games/core@latest

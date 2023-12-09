@@ -1,7 +1,9 @@
 import { Socket } from 'socket.io';
 import { Injectable } from '@nestjs/common';
+import { pick } from 'lodash';
 import { Candidate, MatchAlgo } from './types';
-import { RoomService } from '@/modules/socket/room.service';
+import { RoomService } from './room.service';
+import { GameService } from './game.service';
 
 const MATCH_POOL: Record<string, Record<string, Candidate>> = {};
 const MATCH_ALGO_MAP: Record<number, MatchAlgo> = {};
@@ -32,9 +34,14 @@ function DISPLAY_MATCH_POOL() {
 @Injectable()
 export class MatchPoolService {
   static ROOM_SERVICE: RoomService;
+  static GAME_SERVICE: GameService;
 
-  constructor(roomService: RoomService) {
+  constructor(
+    roomService: RoomService,
+    gameService: GameService,
+  ) {
     MatchPoolService.ROOM_SERVICE = roomService;
+    MatchPoolService.GAME_SERVICE = gameService;
   }
 
   tryToAddPlayer(
@@ -61,18 +68,19 @@ export class MatchPoolService {
 
     DISPLAY_MATCH_POOL();
 
+    socket.on('disconnect', () => this.tryToRemovePlayer(playerId));
+    socket.on('leave-match', () => this.tryToRemovePlayer(playerId));
+
     return true;
   }
 
-  /**
-   * 尝试把玩家从匹配池中拿走，成功了返回 true
-   * @param playerId
-   */
   tryToRemovePlayer(playerId: string): boolean {
     for (const pool of Object.values(MATCH_POOL)) {
       if (pool[playerId]) {
+        const candidate = pool[playerId];
         delete pool[playerId];
         DISPLAY_MATCH_POOL();
+        candidate.socket.emit('leave-match');
         return true;
       }
     }
@@ -81,7 +89,6 @@ export class MatchPoolService {
 
   static TIMER: NodeJS.Timer;
 
-  // FIXME 可能不是一个好的计时器，后续可能会使用其他的方案
   static INIT_MATCH_POOL() {
     MatchPoolService.TIMER = setInterval(() => {
       oneCycle();
@@ -103,10 +110,17 @@ export class MatchPoolService {
           const newCandidateMap: Record<string, Candidate> = {};
           for (let i = N; i > 0; --i)
             if (i >= playerCount) {
-              const candidateSlice = candidates.slice(i - playerCount, i).map(x => x[1]);
+              const candidateSlice = candidates
+                .slice(i - playerCount, i)
+                .map(x => x[1]);
+
               if (matchAlgo(candidateSlice)){
-                Math.random() <= .5 && candidateSlice.reverse();
-                this.ROOM_SERVICE.makeRoom(gameId, candidateSlice, 'match');
+                const players = candidateSlice.map(x => pick(x, ['playerId', 'botId', 'score']));
+                const socketMap = new Map(
+                  candidateSlice.map(x => [x.playerId, x.socket]),
+                );
+                Math.random() <= .5 && players.reverse();
+                this.ROOM_SERVICE.makeRoom(gameId, players, socketMap, 'match');
                 i -= playerCount;
                 flag = true;
               }

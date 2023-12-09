@@ -1,7 +1,7 @@
 import { buildGame, LifeCycle, NewGenerator } from '@soku-games/core';
 import { Server } from 'socket.io';
 import { Inject, Injectable } from '@nestjs/common';
-import { Room } from './room';
+import { Room } from './Room';
 import { Mode } from './types';
 import { RateService } from '@/modules/rate/service';
 import { BotService } from '@/modules/bot/service';
@@ -34,6 +34,7 @@ export class GameService {
           name: 'network-server-controller',
           extra: {
             players: room.players,
+            socketMap: room.socketMap,
             bots,
           },
         },
