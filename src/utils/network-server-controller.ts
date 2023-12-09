@@ -1,25 +1,37 @@
 import { Game, GamePlugin, GamePluginImpl, LifeCycle } from '@soku-games/core';
-import { Player } from '@/modules/socket/types';
+import { Socket } from 'socket.io';
 import { API } from '@/utils/request';
 import { Bot } from '@/entity';
+import { Player } from '@/modules/socket/types';
 
+interface Extra {
+  socketMap: Map<string, Socket>;
+  players: Player[];
+  bots: Bot[];
+}
 
 @GamePluginImpl('network-server-controller')
 export class NetworkServerController extends GamePlugin {
-  bindGame(game: Game, extra?: { players: Player[], bots: Bot[] }): void | Record<string, any> {
+  bindGame(game: Game, extra?: Extra): void | Record<string, any> {
     if (!extra) return ;
 
-    const { players, bots } = extra;
-    const isOk = players.map(() => false);
+    const { players, bots, socketMap } = extra;
+    const isOk = [...socketMap.keys()].map(() => false);
     const isBotReady = bots.map((b) => !b);
     const tryToStart = () => {
       if (isOk.every(x => x) && isBotReady.every(x => x))
         game.start();
     };
 
+    const lock: Record<string, boolean> = {};
     players.forEach((p, i) => {
       let containerId: string;
       const b = bots[i];
+      const socket = socketMap.get(p.playerId);
+      socket?.on('game-start', async () => {
+        isOk[i] = true;
+        tryToStart();
+      });
       if (b) {
         API
           .post('/create', {
@@ -68,15 +80,13 @@ export class NetworkServerController extends GamePlugin {
           });
         });
       }
-
-      p.socket?.on('game-start', async () => {
-        isOk[i] = true;
-        tryToStart();
-      });
-
-      p.socket?.on('game-step', (stepStr: string) => {
-        game.step(stepStr);
-      });
+      else {
+        if (lock[p.playerId]) return;
+        socket?.on('game-step', (stepStr: string) => {
+          game.step(stepStr);
+        });
+        lock[p.playerId] = true;
+      }
     });
   }
 }

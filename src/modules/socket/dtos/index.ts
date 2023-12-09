@@ -1,3 +1,5 @@
+import { Player } from '@/modules/socket/types';
+
 export interface JoinMatchReq {
   gameId: string;
   botId?: string;
@@ -12,10 +14,7 @@ export interface LeaveMatchReq {
 export interface LeaveMatchRes {}
 
 export interface MakeRoomRes {
-  players: {
-    id: string;
-    score: number;
-  }[];
+  players: Player[];
   roomId: string;
 }
 
@@ -37,4 +36,18 @@ export interface PrepareReq {
 
 export interface PrepareRes {
   prepareStatus: boolean[];
+}
+
+export interface CreatePreRoomReq {
+  gameId: string;
+}
+
+export interface JoinPreRoomReq {
+  roomId: string;
+  gameId: string;
+}
+
+export interface SeatPreRoomReq {
+  index: number;
+  botId: string;
 }
