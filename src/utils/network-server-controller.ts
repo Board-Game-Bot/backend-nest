@@ -24,69 +24,67 @@ export class NetworkServerController extends GamePlugin {
     };
 
     const lock: Record<string, boolean> = {};
-    players.forEach((p, i) => {
-      let containerId: string;
-      const b = bots[i];
-      const socket = socketMap.get(p.playerId);
+    bots.forEach((b, i) => {
+      if (!b) return ;
+      let containerId;
+      API
+        .post('/create', {
+          lang: b.langId,
+          code: b.code,
+        })
+        .then(response => {
+          containerId = response.data.containerId;
+          return containerId;
+        })
+        .then(containerId => {
+          return API.post('/compile', { containerId });
+        })
+        .then(() => {
+          isBotReady[i] = true;
+          tryToStart();
+        });
+      let isMyTurn = false;
+      game.subscribe([LifeCycle.AFTER_STEP, LifeCycle.AFTER_START], async () => {
+        if (!(game.data.turn === i && game.isAllowed())) return;
+        API
+          .post('/run', {
+            containerId,
+            input: `${i} ${game.toString()}`,
+          })
+          .then(response => {
+            const output = response.data?.output ?? '';
+            isMyTurn = true;
+            setTimeout(() => {
+              game.step(output);
+              isMyTurn = false;
+            });
+          });
+      });
+      game.subscribe([LifeCycle.INVALID_FORMAT, LifeCycle.INVALID_STEP], () => {
+        if (!isMyTurn) return ;
+        game.end(players.map((_, _i) => _i === i).map(x => x ? '-5' : '+2').join(';'));
+        isMyTurn = false;
+      });
+      game.subscribe(LifeCycle.AFTER_END, () => {
+        API.post('/stop', {
+          containerId,
+        });
+      });
+    });
+    [...socketMap.values()].forEach((socket, i) => {
       socket?.on('game-start', async () => {
         isOk[i] = true;
         tryToStart();
       });
-      if (b) {
-        API
-          .post('/create', {
-            lang: b.langId,
-            code: b.code,
-          })
-          .then(response => {
-            containerId = response.data.containerId;
-            return containerId;
-          })
-          .then(containerId => {
-            return API.post('/compile', {
-              containerId,
-            });
-          })
-          .then(() => {
-            isBotReady[i] = true;
-            tryToStart();
-          });
+    });
+    players.forEach(({ playerId, botId }) => {
+      if (botId) return ;
 
-        let isMyTurn = false;
-        game.subscribe([LifeCycle.AFTER_STEP, LifeCycle.AFTER_START], async () => {
-          if (!(game.data.turn === i && game.isAllowed())) return;
-          API
-            .post('/run', {
-              containerId,
-              input: `${i} ${game.toString()}`,
-            })
-            .then(response => {
-              const output = response.data?.output ?? '';
-              isMyTurn = true;
-              setTimeout(() => {
-                game.step(output);
-                isMyTurn = false;
-              });
-            });
-        });
-        game.subscribe([LifeCycle.INVALID_FORMAT, LifeCycle.INVALID_STEP], () => {
-          if (!isMyTurn) return ;
-          game.end(players.map((_, _i) => _i === i).map(x => x ? '-5' : '+2').join(';'));
-          isMyTurn = false;
-        });
-        game.subscribe(LifeCycle.AFTER_END, () => {
-          API.post('/stop', {
-            containerId,
-          });
-        });
-      }
-      else {
-        if (lock[p.playerId]) return;
-        socket?.on('game-step', (stepStr: string) => {
-          game.step(stepStr);
-        });
-        lock[p.playerId] = true;
-      }
+      if (lock[playerId]) return;
+      socketMap.get(playerId)?.on('game-step', (stepStr: string) => {
+        game.step(stepStr);
+      });
+      lock[playerId] = true;
     });
   }
 }
