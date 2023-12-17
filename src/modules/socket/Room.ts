@@ -6,10 +6,13 @@ import { Mode, Player } from './types';
 import { ChatReq, ChatRes, MakeRoomRes, PrepareReq, PrepareRes } from './dtos';
 
 export class Room {
+  static IdMap: Map<string, Room> = new Map<string, Room>();
+
   roomId: string;
   gameId: string;
   players: Player[];
   socketMap: Map<string, Socket> = new Map;
+  game: Partial<{ initData: string, steps: string[] }> = { initData: '', steps: [] };
 
   constructor(
     gameId: string,
@@ -20,6 +23,7 @@ export class Room {
     callback?: () => void,
   ) {
     roomId = roomId ?? nanoid();
+
     Object.assign(this, { roomId, gameId, players, socketMap });
     [...socketMap.values()].forEach(socket => socket.join(roomId));
 
@@ -56,6 +60,7 @@ export class Room {
         this.emit('leave-room');
         mySocket.removeAllListeners('leave-room');
         mySocket.removeAllListeners('chat');
+        this.disband();
       };
       // 用户主动退出游戏、用户断开连接，都要触发
       mySocket.on('leave-room', handleLeaveRoom);
@@ -68,11 +73,24 @@ export class Room {
       });
   }
 
+  join(playerId: string, socket: Socket) {
+    this.socketMap.set(playerId, socket);
+    socket.join(this.roomId);
+
+    socket.on('disconnect', () => {
+      this.socketMap.delete(playerId);
+    });
+  }
+
   emit(event: string, message?: any) {
     GET_SOCKET_SERVER()?.to(this.roomId).emit(event, message);
   }
 
   allPlayerOffEvent(event: string) {
     this.players.forEach(player => this.socketMap.get(player.playerId).removeAllListeners(event));
+  }
+
+  disband() {
+    Room.IdMap.delete(this.roomId);
   }
 }

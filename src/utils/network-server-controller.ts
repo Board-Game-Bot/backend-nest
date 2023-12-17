@@ -44,6 +44,8 @@ export class NetworkServerController extends GamePlugin {
           tryToStart();
         });
       let isMyTurn = false;
+
+      // step if bot exists
       game.subscribe([LifeCycle.AFTER_STEP, LifeCycle.AFTER_START], async () => {
         if (!(game.data.turn === i && game.isAllowed())) return;
         API
@@ -60,23 +62,31 @@ export class NetworkServerController extends GamePlugin {
             });
           });
       });
+
+      // game end if invalid format step
       game.subscribe([LifeCycle.INVALID_FORMAT, LifeCycle.INVALID_STEP], () => {
         if (!isMyTurn) return ;
         game.end(players.map((_, _i) => _i === i).map(x => x ? '-5' : '+2').join(';'));
         isMyTurn = false;
       });
+
+      // bot stop
       game.subscribe(LifeCycle.AFTER_END, () => {
         API.post('/stop', {
           containerId,
         });
       });
     });
+
+    // frontend prepare
     [...socketMap.values()].forEach((socket, i) => {
       socket?.on('game-start', async () => {
         isOk[i] = true;
         tryToStart();
       });
     });
+
+    // step from client
     players.forEach(({ playerId, botId }) => {
       if (botId) return ;
 

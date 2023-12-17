@@ -47,7 +47,10 @@ export class GameService {
         },
       ],
     });
-    game.prepare(NewGenerator(gameId).generate());
+    const initData = NewGenerator(gameId).generate();
+    game.prepare(initData);
+    room.game.initData = initData;
+    game.subscribe(LifeCycle.BEFORE_STEP, (stepStr: string) => room.game.steps.push(stepStr));
 
     if (mode === 'match')
       game.subscribe(LifeCycle.AFTER_END, (result: string) => {
@@ -64,5 +67,8 @@ export class GameService {
           }
         });
       });
+
+    game.subscribe(LifeCycle.AFTER_START, () => Room.IdMap.set(room.roomId, room));
+    game.subscribe(LifeCycle.AFTER_END, () => room.disband());
   }
 }
