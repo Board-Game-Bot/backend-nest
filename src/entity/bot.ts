@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity()
 export class Bot {
@@ -19,6 +19,8 @@ export class Bot {
   // 描述
   @Column('text')
     description: string;
+  @CreateDateColumn()
+    createTime: Date;
   // 是否公开
   @Column('boolean')
     isPublic: boolean;

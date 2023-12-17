@@ -1,26 +1,32 @@
 import { IsOptional, Length } from 'class-validator';
+import { Bot } from '@/entity';
 
 // require jwt
-export class CreateBotDto {
+export class CreateDto {
   gameId: string;
   langId: string;
-  @Length(1, 32)
-    name: string;
+  @Length(0, 32)
+  @IsOptional()
+    name?: string;
   @Length(0, 64)
-    description: string;
+  @IsOptional()
+    description?: string;
+  code: string;
+}
+
+export interface CreateVo extends Bot { }
+
+export interface GetVo {
+  bots: Exclude<Bot, 'code'>[];
+}
+
+export interface CodeVo {
   code: string;
 }
 
 // require jwt
-export class RequestBotDto {}
-
-export class SeeBotDto {
-  userId: string;
-}
-
-// require jwt
-export class UpdateBotDto {
-  botId: string;
+export class UpdateDto {
+  id: string;
   @IsOptional()
     gameId: string;
   @IsOptional()
@@ -38,6 +44,6 @@ export class UpdateBotDto {
 }
 
 // require jwt
-export class DeleteBotDto {
+export class DeleteDto {
   botId: string;
 }

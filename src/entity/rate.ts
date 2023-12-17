@@ -1,11 +1,12 @@
-import { Column } from 'typeorm';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 
+@Entity()
 export class Rate {
-  @Column({ type: 'varchar' })
+  @PrimaryColumn('varchar')
     userId: string;
-  @Column({ type: 'varchar' })
+  @PrimaryColumn('varchar')
     gameId: string;
-  @Column({ type: 'varchar', nullable: true })
+  @PrimaryColumn('varchar')
     botId: string;
   @Column({ type: 'int' })
     score: number;

@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, OneToMany, PrimaryColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryColumn } from 'typeorm';
 
 @Entity()
 export class Tape {
@@ -10,6 +10,8 @@ export class Tape {
     json: string;
   @Column('varchar', { nullable: true })
     userId: string;
+  @CreateDateColumn()
+    uploadTime: Date;
 
   @OneToMany(() => Participant, participant => participant.tape)
     participants: Participant[];
