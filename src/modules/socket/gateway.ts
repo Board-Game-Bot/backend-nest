@@ -9,11 +9,13 @@ import {
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { Inject, Injectable } from '@nestjs/common';
-import { CreatePreRoomReq, JoinMatchReq, JoinPreRoomReq } from './dtos';
+import { pick } from 'lodash';
+import { CreatePreRoomReq, JoinLiveReq, JoinMatchReq, JoinPreRoomReq } from './dtos';
 import { GET_SOCKET_SERVER, SET_SOCKET_SERVER } from './constants';
 import { Client } from './clazz';
 import { MatchPoolService } from './match-pool.service';
 import { PreRoom } from './PreRoom';
+import { Room } from './Room';
 import { RateService } from '@/modules/rate/service';
 
 @Injectable()
@@ -24,15 +26,14 @@ import { RateService } from '@/modules/rate/service';
 export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
     server: Server;
-
   @Inject()
     jwtService: JwtService;
-
   @Inject()
     rateService: RateService;
-
   @Inject()
     matchPoolService: MatchPoolService;
+
+  timerMap: Map<Socket, NodeJS.Timer> = new Map<Socket, NodeJS.Timer>();
 
   handleConnection(socket: Socket): any {
     // 单例服务器
@@ -45,6 +46,12 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const { id } = this.jwtService.verify(jwt);
 
       new Client(socket, id);
+
+      this.timerMap.set(socket, setInterval(() => {
+        socket.emit('lives', {
+          rooms: [...Room.IdMap.values()].map(room => pick(room, ['roomId', 'players'])),
+        });
+      }, 1000));
     }
     catch {
       // failed
@@ -56,6 +63,9 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const client = Client.IdMap.get(socket);
     client.disconnect();
     this.matchPoolService.tryToRemovePlayer(client.playerId);
+
+    clearInterval(this.timerMap.get(socket));
+    this.timerMap.delete(socket);
   }
 
   @SubscribeMessage('join-match')
@@ -100,6 +110,28 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (preRoom?.gameId !== gameId) return ;
 
     preRoom.join(client);
+  }
+
+  @SubscribeMessage('join-live')
+  joinLive(
+    @MessageBody() body: JoinLiveReq,
+    @ConnectedSocket() socket: Socket,
+  ) {
+    const { roomId } = body;
+    const room = Room.IdMap.get(roomId);
+    if (!room) return ;
+
+    socket.emit('load-sync', {
+      room: {
+        roomId,
+        players: room.players,
+        gameId: room.gameId,
+      },
+      ...room.game,
+    });
+
+    const playerId = Client.IdMap.get(socket).playerId;
+    room.join(playerId, socket);
   }
 
   async getScore(gameId: string, playerId: string, botId: string) {

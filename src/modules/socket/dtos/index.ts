@@ -51,3 +51,7 @@ export interface SeatPreRoomReq {
   index: number;
   botId: string;
 }
+
+export interface JoinLiveReq {
+  roomId: string;
+}
