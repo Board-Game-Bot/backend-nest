@@ -82,6 +82,10 @@ export class AuthService {
     };
   }
 
+  async isAdmin(auth: Auth) {
+    return auth.id === 'Andrew';
+  }
+
   signIn(id: string, remember: boolean) {
     return this.jwtService.sign({ id }, { expiresIn: remember ? '14d' : '1d' });
   }
