@@ -1,5 +1,7 @@
-import { Controller, Get } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { GameService } from './game.service';
+import { Game } from '@/entity';
+import { AdminGuard } from '@/modules/auth/guard/admin.guard';
 import { downloadGame } from '@/utils';
 
 
@@ -11,6 +13,7 @@ export class GameController {
 
   constructor(gameService: GameService) {
     this.gameService = gameService;
+    // 运行时下载游戏
     if (GameController.HAS_DOWNLOAD) return ;
     GameController.HAS_DOWNLOAD = true;
     gameService.getAll()
@@ -24,5 +27,22 @@ export class GameController {
   @Get('/all')
   async getAll() {
     return await this.gameService.getAll();
+  }
+
+  @Post('/list')
+  async listGames() {
+    return await this.gameService.listGames();
+  }
+
+  @Post('/create')
+  @UseGuards(AdminGuard)
+  async createGame(@Body() body: Game) {
+    return await this.gameService.create(body);
+  }
+
+  @Post('/delete')
+  @UseGuards(AdminGuard)
+  async deleteGame(@Body() body: Pick<Game, 'id'>) {
+    return await this.gameService.delete(body.id);
   }
 }
