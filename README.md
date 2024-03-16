@@ -6,7 +6,7 @@
 
 ## 技术栈
 
-![菜单](https://skillicons.dev/icons?i=nest,ts,postgresql,redis)
+![菜单](https://skillicons.dev/icons?i=nest,ts,mysql,redis)
 
 ## TodoList
 
