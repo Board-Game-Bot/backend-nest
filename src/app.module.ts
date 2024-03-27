@@ -8,6 +8,7 @@ import { AppService } from './app.service';
 import { AppConfig, schemeValidator } from './app.config';
 
 import { UserModule, AuthModule, SocketModule, GameModule, RateModule, BotModule, TapeModule } from './modules';
+import { BotRunModule } from '@/modules/botrun/module';
 
 @Module({
   imports: [
@@ -30,13 +31,19 @@ import { UserModule, AuthModule, SocketModule, GameModule, RateModule, BotModule
     JwtModule.registerAsync({
       useFactory(config: AppConfig): JwtModuleOptions {
         return {
-          ...config,
-          secret: config.jwt.secret,
+          ...config.jwt,
         };
       },
       inject: [AppConfig],
       global: true,
     }),
+    BotRunModule.register(),
+    // BotRunModule.registerAsync({
+    //   useFactory(config: AppConfig) {
+    //     return { ...config.bot };
+    //   },
+    //   inject: [AppConfig],
+    // }),
     UserModule,
     AuthModule,
     GameModule,

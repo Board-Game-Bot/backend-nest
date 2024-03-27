@@ -1,9 +1,16 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { TypedConfigModuleOptions } from 'nest-typed-config';
 
+export class BotConfig {
+  protocol: string;
+  host: string;
+  port: string;
+}
+
 export class AppConfig {
   db!: TypeOrmModuleOptions;
   jwt!: JwtConfig;
+  bot!: BotConfig;
 }
 
 class JwtConfig {
