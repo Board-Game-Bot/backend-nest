@@ -1,21 +1,28 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { nanoid } from 'nanoid';
 import { CodeVo, CreateDto, CreateVo, GetVo, UpdateDto } from './dtos';
 import { Bot } from '@/entity';
-import { API, checkBotCompile, makeFailure } from '@/utils';
+import { makeFailure } from '@/utils';
+import { BotRunService } from '@/modules/botrun/services';
 
 @Injectable()
 export class BotService {
   @InjectRepository(Bot)
     botDao: Repository<Bot>;
 
+  @Inject()
+    botRunService: BotRunService;
+
   async create(userId: string, dto: CreateDto): Promise<CreateVo> {
     try {
-      const [containerId, message] = await checkBotCompile(dto.langId, dto.code);
+      const containerId = await this.botRunService.createContainer(dto.langId, dto.code);
+      const message = await this.botRunService.compile(containerId);
+
       if (message) throw new Error(message);
-      API.post('/stop', { containerId });
+
+      this.botRunService.stop(containerId);
 
       const { name, description } = dto;
       return await this.botDao.save({
@@ -92,7 +99,9 @@ export class BotService {
         userId,
       });
       if (dto.code) {
-        const [, message] = await checkBotCompile(bot.langId, bot.code);
+        const containerId = await this.botRunService.createContainer(bot.langId, bot.code);
+        const message = await this.botRunService.compile(containerId);
+        this.botRunService.stop(containerId);
         if (message) throw new Error(message);
       }
       await this.botDao.update(dto.id, {

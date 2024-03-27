@@ -8,9 +8,10 @@ import { Rate } from '@/entity/rate';
 import { RateService } from '@/modules/rate/service';
 import { BotService } from '@/modules/bot/service';
 import { Bot } from '@/entity';
+import { BotRunModule } from '@/modules/botrun/module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Rate, Bot])],
+  imports: [TypeOrmModule.forFeature([Rate, Bot]), BotRunModule.register()],
   providers: [
     SocketGateway,
     RoomService,
