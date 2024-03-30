@@ -2,10 +2,12 @@ import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { nanoid } from 'nanoid';
+import { omit } from 'lodash';
 import { CodeVo, CreateDto, CreateVo, GetVo, UpdateDto } from './dtos';
 import { Bot } from '@/entity';
 import { makeFailure } from '@/utils';
 import { BotRunService } from '@/modules/botrun/services';
+import { BotStatus } from '@/types';
 
 @Injectable()
 export class BotService {
@@ -17,13 +19,6 @@ export class BotService {
 
   async create(userId: string, dto: CreateDto): Promise<CreateVo> {
     try {
-      const containerId = await this.botRunService.createContainer(dto.langId, dto.code);
-      const message = await this.botRunService.compile(containerId);
-
-      if (message) throw new Error(message);
-
-      this.botRunService.stop(containerId);
-
       const { name, description } = dto;
       return await this.botDao.save({
         id: nanoid(),
@@ -60,7 +55,7 @@ export class BotService {
         take: pageSize,
       });
       return {
-        bots,
+        bots: bots.map(bot => omit(bot, 'containerId')),
       };
     }
     catch (e) {
@@ -94,16 +89,10 @@ export class BotService {
 
   async update(userId: string, dto: UpdateDto): Promise<void> {
     try {
-      const bot = await this.botDao.findOneByOrFail({
+      await this.botDao.findOneByOrFail({
         id: dto.id,
         userId,
       });
-      if (dto.code) {
-        const containerId = await this.botRunService.createContainer(bot.langId, bot.code);
-        const message = await this.botRunService.compile(containerId);
-        this.botRunService.stop(containerId);
-        if (message) throw new Error(message);
-      }
       await this.botDao.update(dto.id, {
         ...dto,
       });
@@ -112,6 +101,49 @@ export class BotService {
     catch (e) {
       console.log('update bot error: ', e);
       makeFailure('update bot error');
+    }
+  }
+
+  async compile(userId: string, botId: string): Promise<void> {
+    try {
+      const bot = await this.botDao.findOneByOrFail({
+        id: botId,
+        userId,
+      });
+      await this.botDao.update(botId, {
+        status: BotStatus.Deploying,
+      });
+
+      (async () => {
+        const containerId = await this.botRunService.createContainer(bot.langId, bot.code);
+        await this.botDao.update(botId, {
+          containerId,
+        });
+        this.botRunService.compile(containerId);
+      })();
+      return ;
+    }
+    catch(e) {
+      console.log('compile bot error: ', e);
+      makeFailure('compile bot error');
+    }
+  }
+
+  async stop(userId: string, botId: string): Promise<void> {
+    try {
+      const bot = await this.botDao.findOneByOrFail({
+        id: botId,
+        userId,
+      });
+      const containerId = bot.containerId;
+      await this.botDao.update(botId, {
+        status: BotStatus.Terminating,
+      });
+      this.botRunService.stop(containerId);
+    }
+    catch (e) {
+      console.log('stop bot error: ', e);
+      makeFailure('stop bot error');
     }
   }
 
@@ -125,6 +157,18 @@ export class BotService {
     catch (e) {
       console.log('delete bot error: ', e);
       throw new Error('delete bot error');
+    }
+  }
+
+  async innerUpdateStatus(containerId: string, status: BotStatus, message?: string): Promise<void> {
+    try {
+      await this.botDao.update({ containerId }, {
+        status,
+        statusMessage: message,
+      });
+    }
+    catch {
+      throw new Error('update bot status error') ;
     }
   }
 }

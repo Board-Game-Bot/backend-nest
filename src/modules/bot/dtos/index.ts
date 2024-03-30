@@ -1,5 +1,6 @@
 import { IsOptional, Length } from 'class-validator';
 import { Bot } from '@/entity';
+import { BotStatus } from '@/types';
 
 // require jwt
 export class CreateDto {
@@ -43,7 +44,17 @@ export class UpdateDto {
     code: string;
 }
 
+export class OnlyIdDto {
+  id: string;
+}
+
 // require jwt
 export class DeleteDto {
   botId: string;
+}
+
+export class InnerUpdateStatusDto {
+  containerId: string;
+  status: BotStatus;
+  message?: string;
 }

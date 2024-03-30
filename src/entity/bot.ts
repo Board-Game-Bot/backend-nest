@@ -1,4 +1,5 @@
 import { Column, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm';
+import { BotStatus } from '@/types';
 
 @Entity()
 export class Bot {
@@ -27,4 +28,15 @@ export class Bot {
   // 代码
   @Column('text')
     code: string;
+  @Column({
+    type: 'enum',
+    enum: BotStatus,
+    default: BotStatus.Hibernating,
+  })
+    status: BotStatus;
+  @Column('varchar', { nullable: true })
+    containerId?: string;
+
+  @Column('varchar', { nullable: true })
+    statusMessage?: string;
 }

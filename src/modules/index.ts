@@ -5,3 +5,5 @@ export * from './bot';
 export * from './game';
 export * from './tape';
 export * from './rate';
+export * from './inner';
+export * from './botrun';
