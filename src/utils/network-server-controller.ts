@@ -26,23 +26,9 @@ export class NetworkServerController extends GamePlugin {
     const lock: Record<string, boolean> = {};
     bots.forEach((b, i) => {
       if (!b) return ;
-      let containerId;
-      API
-        .post('/create', {
-          lang: b.langId,
-          code: b.code,
-        })
-        .then(response => {
-          containerId = response.data.containerId;
-          return containerId;
-        })
-        .then(containerId => {
-          return API.post('/compile', { containerId });
-        })
-        .then(() => {
-          isBotReady[i] = true;
-          tryToStart();
-        });
+      const containerId = b.containerId;
+      isBotReady[i] = true;
+      tryToStart();
       let isMyTurn = false;
 
       // step if bot exists
@@ -68,13 +54,6 @@ export class NetworkServerController extends GamePlugin {
         if (!isMyTurn) return ;
         game.end(players.map((_, _i) => _i === i).map(x => x ? '-5' : '+2').join(';'));
         isMyTurn = false;
-      });
-
-      // bot stop
-      game.subscribe(LifeCycle.AFTER_END, () => {
-        API.post('/stop', {
-          containerId,
-        });
       });
     });
 
