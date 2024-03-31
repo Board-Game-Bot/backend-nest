@@ -1,6 +1,6 @@
 import { Game, GamePlugin, GamePluginImpl, LifeCycle } from '@soku-games/core';
 import { Socket } from 'socket.io';
-import { API } from '@/utils/request';
+import { AxiosInstance } from 'axios';
 import { Bot } from '@/entity';
 import { Player } from '@/modules/socket/types';
 import { sleep } from '@/utils';
@@ -9,6 +9,7 @@ interface Extra {
   socketMap: Map<string, Socket>;
   players: Player[];
   bots: Bot[];
+  API: AxiosInstance;
 }
 
 @GamePluginImpl('network-server-controller')
@@ -16,7 +17,7 @@ export class NetworkServerController extends GamePlugin {
   bindGame(game: Game, extra?: Extra): void | Record<string, any> {
     if (!extra) return ;
 
-    const { players, bots, socketMap } = extra;
+    const { players, bots, socketMap, API } = extra;
     const isOk = [...socketMap.keys()].map(() => false);
     const tryToStart = () => {
       if (isOk.every(x => x)) game.start();

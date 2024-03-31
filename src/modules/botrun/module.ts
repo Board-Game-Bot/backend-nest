@@ -6,7 +6,7 @@ import { AppConfig } from '@/app.config';
 import { BotRunService } from '@/modules/botrun/services';
 
 @Module({
-  exports: [BotRunService],
+  exports: [BotRunService, API_INSTANCE_KEY],
 })
 export class BotRunModule {
   static register(): DynamicModule {

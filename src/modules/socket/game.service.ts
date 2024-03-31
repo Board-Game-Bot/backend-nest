@@ -1,10 +1,12 @@
 import { buildGame, LifeCycle, NewGenerator } from '@soku-games/core';
 import { Server } from 'socket.io';
 import { Inject, Injectable } from '@nestjs/common';
+import { AxiosInstance } from 'axios';
 import { Room } from './Room';
 import { Mode } from './types';
 import { RateService } from '@/modules/rate/service';
 import { BotService } from '@/modules/bot/service';
+import { API_INSTANCE_KEY } from '@/modules/botrun/constants';
 
 @Injectable()
 export class GameService {
@@ -12,6 +14,8 @@ export class GameService {
     rateService: RateService;
   @Inject()
     botService: BotService;
+  @Inject(API_INSTANCE_KEY)
+    apiInstance: AxiosInstance;
 
   async startGame(room: Room, server: Server, mode: Mode) {
     room.emit('start-game');
@@ -33,6 +37,7 @@ export class GameService {
         {
           name: 'network-server-controller',
           extra: {
+            API: this.apiInstance,
             players: room.players,
             socketMap: room.socketMap,
             bots,
