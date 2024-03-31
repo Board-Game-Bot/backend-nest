@@ -81,6 +81,7 @@ export class PreRoom {
     this.socketMap.delete(playerId);
     this.players = this.players.map(player => player.playerId === playerId ? { playerId: '', botId: '' } : player);
 
+    if (!socket) return ;
     socket.leave(this.id);
     socket.emit(this.wrap('leave'));
 

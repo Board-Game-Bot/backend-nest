@@ -3,6 +3,7 @@ import { Socket } from 'socket.io';
 import { API } from '@/utils/request';
 import { Bot } from '@/entity';
 import { Player } from '@/modules/socket/types';
+import { sleep } from '@/utils';
 
 interface Extra {
   socketMap: Map<string, Socket>;
@@ -17,36 +18,47 @@ export class NetworkServerController extends GamePlugin {
 
     const { players, bots, socketMap } = extra;
     const isOk = [...socketMap.keys()].map(() => false);
-    const isBotReady = bots.map((b) => !b);
     const tryToStart = () => {
-      if (isOk.every(x => x) && isBotReady.every(x => x))
-        game.start();
+      if (isOk.every(x => x)) game.start();
     };
 
     const lock: Record<string, boolean> = {};
+    // frontend prepare
+    [...socketMap.values()].forEach((socket, i) => {
+      const listener = async () => {
+        isOk[i] = true;
+        tryToStart();
+      };
+      socket?.on('game-start', listener);
+      game.subscribe([LifeCycle.AFTER_END], () => {
+        socket?.off('game-start', listener);
+      });
+    });
+
     bots.forEach((b, i) => {
       if (!b) return ;
       const containerId = b.containerId;
-      isBotReady[i] = true;
-      tryToStart();
       let isMyTurn = false;
 
       // step if bot exists
+      let isGameOver = false;
+      game.subscribe([LifeCycle.AFTER_END], () => isGameOver = true);
       game.subscribe([LifeCycle.AFTER_STEP, LifeCycle.AFTER_START], async () => {
+        if (isGameOver) return ;
         if (!(game.data.turn === i && game.isAllowed())) return;
-        API
-          .post('/run', {
-            containerId,
-            input: `${i} ${game.toString()}`,
-          })
-          .then(response => {
-            const output = response.data?.output ?? '';
-            isMyTurn = true;
-            setTimeout(() => {
-              game.step(output);
-              isMyTurn = false;
-            });
-          });
+        const inputStr = `${i} ${game.toString()}`;
+        await sleep(100);
+        const response = await API.post('/run', {
+          containerId,
+          input: inputStr,
+        });
+
+        const output = response.data?.output ?? '';
+        isMyTurn = true;
+        setTimeout(() => {
+          game.step(i + output);
+          isMyTurn = false;
+        });
       });
 
       // game end if invalid format step
@@ -57,21 +69,18 @@ export class NetworkServerController extends GamePlugin {
       });
     });
 
-    // frontend prepare
-    [...socketMap.values()].forEach((socket, i) => {
-      socket?.on('game-start', async () => {
-        isOk[i] = true;
-        tryToStart();
-      });
-    });
-
     // step from client
     players.forEach(({ playerId, botId }) => {
       if (botId) return ;
 
       if (lock[playerId]) return;
-      socketMap.get(playerId)?.on('game-step', (stepStr: string) => {
+      const socket = socketMap.get(playerId);
+      const listener = (stepStr: string) => {
         game.step(stepStr);
+      };
+      socket?.on('game-step', listener);
+      game.subscribe([LifeCycle.AFTER_END], () => {
+        socket.off('game-step', listener);
       });
       lock[playerId] = true;
     });

@@ -149,8 +149,13 @@ export class BotService {
 
   async delete(userId: string, botId: string): Promise<void> {
     try {
-      if (!await this.botDao.findBy({ id: botId, userId }))
+      const bot = await this.botDao.findOneBy({ id: botId, userId });
+      if (!bot)
         return;
+      const containerId = bot.containerId;
+      if (containerId) {
+        this.botRunService.stop(containerId);
+      }
       await this.botDao.delete(botId);
       return;
     }
