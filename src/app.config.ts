@@ -7,10 +7,15 @@ export class BotConfig {
   port: string;
 }
 
+export class InnerConfig {
+  token: string;
+}
+
 export class AppConfig {
   db!: TypeOrmModuleOptions;
   jwt!: JwtConfig;
   bot!: BotConfig;
+  inner!: InnerConfig;
 }
 
 class JwtConfig {

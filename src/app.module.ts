@@ -8,7 +8,6 @@ import { AppService } from './app.service';
 import { AppConfig, schemeValidator } from './app.config';
 
 import { UserModule, AuthModule, SocketModule, GameModule, RateModule, BotModule, TapeModule } from './modules';
-import { BotRunModule } from '@/modules/botrun/module';
 
 @Module({
   imports: [
@@ -37,13 +36,6 @@ import { BotRunModule } from '@/modules/botrun/module';
       inject: [AppConfig],
       global: true,
     }),
-    BotRunModule.register(),
-    // BotRunModule.registerAsync({
-    //   useFactory(config: AppConfig) {
-    //     return { ...config.bot };
-    //   },
-    //   inject: [AppConfig],
-    // }),
     UserModule,
     AuthModule,
     GameModule,

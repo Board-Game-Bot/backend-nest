@@ -15,12 +15,12 @@ export class BotRunService {
 
   async compile(containerId: string) {
     const payload = { containerId };
-    const res = await this.api.post('/compile', payload);
-    return res.data.message;
+    this.api.post('/compile', payload)
+      .catch(() => undefined);
   }
 
   async stop(containerId: string) {
     const payload = { containerId };
-    return await this.api.post('/stop', payload);
+    this.api.post('/stop', payload);
   }
 }
