@@ -3,7 +3,8 @@ import { Injectable } from '@nestjs/common';
 import { pick } from 'lodash';
 import { Candidate, MatchAlgo } from './types';
 import { RoomService } from './room.service';
-import { GameService } from './game.service';
+import { OnlineGameService } from './online-game.service';
+import { EventManager } from '@/utils';
 
 const MATCH_POOL: Record<string, Record<string, Candidate>> = {};
 const MATCH_ALGO_MAP: Record<number, MatchAlgo> = {};
@@ -18,7 +19,7 @@ const PLAYER_COUNT_MAP: Record<number, number> = {};
 const COMMON_PLAYER_COUNT = 2;
 
 function DISPLAY_MATCH_POOL() {
-  const pool = Object.entries(MATCH_POOL)
+  /*const pool = */Object.entries(MATCH_POOL)
     .reduce(
       (pool, playerMapEntry) => {
         const [game, playerMap] = playerMapEntry;
@@ -28,17 +29,18 @@ function DISPLAY_MATCH_POOL() {
       {} as Record<string, string[]>,
     );
 
-  console.log('MATCH_POOL', pool);
 }
 
 @Injectable()
 export class MatchPoolService {
   static ROOM_SERVICE: RoomService;
-  static GAME_SERVICE: GameService;
+  static GAME_SERVICE: OnlineGameService;
+
+  em = new EventManager();
 
   constructor(
     roomService: RoomService,
-    gameService: GameService,
+    gameService: OnlineGameService,
   ) {
     MatchPoolService.ROOM_SERVICE = roomService;
     MatchPoolService.GAME_SERVICE = gameService;
@@ -68,8 +70,8 @@ export class MatchPoolService {
 
     DISPLAY_MATCH_POOL();
 
-    socket.on('disconnect', () => this.tryToRemovePlayer(playerId));
-    socket.on('leave-match', () => this.tryToRemovePlayer(playerId));
+    this.em.bindEvent(socket, 'disconnect', () => this.tryToRemovePlayer(playerId));
+    this.em.bindEvent(socket, 'leave-match', () => this.tryToRemovePlayer(playerId));
 
     return true;
   }

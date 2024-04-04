@@ -3,13 +3,14 @@ import { Server } from 'socket.io';
 import { Inject, Injectable } from '@nestjs/common';
 import { AxiosInstance } from 'axios';
 import { Room } from './Room';
-import { Mode } from './types';
+import { Mode, PreRoomEvent } from './types';
 import { RateService } from '@/modules/rate/service';
 import { BotService } from '@/modules/bot/service';
 import { API_INSTANCE_KEY } from '@/modules/botrun/constants';
+import { makeRoomWrapper } from '@/modules/socket/utils';
 
 @Injectable()
-export class GameService {
+export class OnlineGameService {
   @Inject()
     rateService: RateService;
   @Inject()
@@ -17,8 +18,9 @@ export class GameService {
   @Inject(API_INSTANCE_KEY)
     apiInstance: AxiosInstance;
 
-  async startGame(room: Room, server: Server, mode: Mode) {
-    room.emit('start-game');
+  async startGame(room: Room, server: Server, mode: Mode, preRoomId?: string) {
+    const event = preRoomId ? makeRoomWrapper(preRoomId)(PreRoomEvent.StartGame) : 'start-game';
+    room.emit(event);
     const { gameId, roomId } = room;
 
     const bots = await Promise.all(
@@ -73,7 +75,9 @@ export class GameService {
         });
       });
 
-    game.subscribe(LifeCycle.AFTER_START, () => Room.IdMap.set(room.roomId, room));
+    game.subscribe(LifeCycle.AFTER_START, () => {
+      Room.IdMap.set(room.roomId, room);
+    });
     game.subscribe(LifeCycle.AFTER_END, () => room.disband());
   }
 }

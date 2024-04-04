@@ -4,6 +4,9 @@ import { Client } from './clazz';
 import { GET_SOCKET_SERVER } from './constants';
 import { SeatPreRoomReq } from './dtos';
 import { MatchPoolService } from './match-pool.service';
+import { PreRoomEvent } from '@/modules/socket/types';
+import { makeRoomWrapper } from '@/modules/socket/utils';
+import { EventManager } from '@/utils';
 
 interface Player {
   playerId: string;
@@ -19,6 +22,8 @@ export class PreRoom {
   gameId: string;
   ownerId: string;
 
+  em: EventManager = new EventManager();
+
   constructor(client: Client, gameId: string, playerCount: number) {
     PreRoom.IdMap.set(this.id, this);
     this.players = Array.from({ length: playerCount }, () => ({ playerId: '', botId: '' }));
@@ -29,16 +34,23 @@ export class PreRoom {
 
     const { socket } = client;
     socket.join(this.id);
-    socket.emit('create-preroom', { roomId: this.id });
+    socket.emit(PreRoomEvent.CreatePreRoom, {
+      room: {
+        roomId: this.id,
+        clients: [...this.socketMap.keys()],
+        players: this.players,
+        ownerId: this.ownerId,
+      },
+    });
     this.syncPreRoom();
-    socket.on('disconnect', () => this.disband());
-    socket.on(this.wrap('leave'), () => this.disband());
-    socket.on(this.wrap('start'), () => this.startGame());
-    this.bindEvent(client);
+    this.em.bindEvent(socket, 'disconnect', this.disband.bind(this));
+    this.em.bindEvent(socket, this.wrap(PreRoomEvent.LeavePreRoom), this.disband.bind(this));
+    this.em.bindEvent(socket, this.wrap(PreRoomEvent.StartGame), () => this.startGame());
+    this.bindBasicEvent(client);
   }
 
-  wrap(event: string) {
-    return `preroom-${this.id}(${event})`;
+  wrap(event: PreRoomEvent) {
+    return makeRoomWrapper(this.id)(event);
   }
 
   emit(event: string, params?: any) {
@@ -47,20 +59,28 @@ export class PreRoom {
 
   join(client: Client) {
     const { socket } = client;
-    socket.emit('join-preroom', { roomId: this.id });
     this.socketMap.set(client.playerId, client.socket);
     socket.join(this.id);
+
+    socket.emit(PreRoomEvent.JoinPreRoom, {
+      room: {
+        roomId: this.id,
+        clients: [...this.socketMap.keys()],
+        players: this.players,
+        ownerId: this.ownerId,
+      },
+    });
     this.syncPreRoom();
 
-    this.bindEvent(client);
+    this.bindBasicEvent(client);
   }
 
-  bindEvent(client: Client) {
+  bindBasicEvent(client: Client) {
     const { socket, playerId } = client;
-    socket.on('disconnect', () => this.leave(playerId));
-    socket.on(this.wrap('leave'), () => this.leave(playerId));
-    socket.on(this.wrap('seat'), ({ botId, index }: SeatPreRoomReq) => this.seat(playerId, botId, index));
-    socket.on(this.wrap('unseat'), ({ index }) => this.unseat(index));
+    this.em.bindEvent(socket, 'disconnect', this.leave.bind(this, playerId));
+    this.em.bindEvent(socket, this.wrap(PreRoomEvent.LeavePreRoom), () => this.leave(playerId));
+    this.em.bindEvent(socket, this.wrap(PreRoomEvent.SeatPreRoom), ({ botId, index }: SeatPreRoomReq) => this.seat(playerId, botId, index));
+    this.em.bindEvent(socket, this.wrap(PreRoomEvent.UnseatPreRoom), ({ index }) => this.unseat(index));
   }
 
   seat(playerId: string, botId: string, index: number) {
@@ -83,13 +103,13 @@ export class PreRoom {
 
     if (!socket) return ;
     socket.leave(this.id);
-    socket.emit(this.wrap('leave'));
+    socket.emit(this.wrap(PreRoomEvent.LeavePreRoom));
 
     this.syncPreRoom();
   }
 
   syncPreRoom() {
-    this.emit(this.wrap('sync'), {
+    this.emit(this.wrap(PreRoomEvent.SyncPreRoom), {
       roomId: this.id,
       clients: [...this.socketMap.keys()],
       players: this.players,
@@ -100,14 +120,15 @@ export class PreRoom {
   startGame() {
     if (this.players.find(({ playerId }) => !playerId)) return ;
 
-    MatchPoolService.ROOM_SERVICE.makeRoom(this.gameId, this.players, this.socketMap, 'custom');
+    MatchPoolService.ROOM_SERVICE.makeRoom(this.gameId, this.players, this.socketMap, 'custom', this.id);
   }
 
   disband() {
     PreRoom.IdMap.delete(this.id);
 
-    this.emit(this.wrap('disband'));
+    this.emit(this.wrap(PreRoomEvent.DisbandPreRoom));
 
     [...this.socketMap.values()].forEach((socket) => socket.leave(this.id));
+
   }
 }
