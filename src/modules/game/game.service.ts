@@ -44,4 +44,9 @@ export class GameService {
       throw new HttpException('Delete Game Error', HttpStatus.BAD_REQUEST);
     }
   }
+
+  async get(id: string) {
+    const game = await this.gameDao.findOneBy({ id });
+    return game;
+  }
 }

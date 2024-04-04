@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 
+
 export function makeFailure(message: string) {
   throw new HttpException(message, HttpStatus.BAD_REQUEST);
 }
@@ -13,3 +14,4 @@ export async function sleep(ms: number) {
 }
 
 export * from './downloadGame';
+export * from './event-manager';

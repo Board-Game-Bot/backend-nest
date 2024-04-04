@@ -14,8 +14,9 @@ import { CreatePreRoomReq, JoinLiveReq, JoinMatchReq, JoinPreRoomReq } from './d
 import { GET_SOCKET_SERVER, SET_SOCKET_SERVER } from './constants';
 import { Client } from './clazz';
 import { MatchPoolService } from './match-pool.service';
-import { PreRoom } from './PreRoom';
 import { Room } from './Room';
+import { CustomModeService } from './custom-mode.service';
+import { PreRoomEvent } from './types';
 import { RateService } from '@/modules/rate/service';
 
 @Injectable()
@@ -87,29 +88,23 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     result && socket.emit('join-match') ;
   }
 
-  @SubscribeMessage('create-preroom')
+  // 自定义模式
+  @Inject()
+    customModeService: CustomModeService;
+  @SubscribeMessage(PreRoomEvent.CreatePreRoom)
   createPreRoom(
     @MessageBody() body: CreatePreRoomReq,
     @ConnectedSocket() socket: Socket,
   ) {
-    const client = Client.IdMap.get(socket);
-
-    // TODO: 改为先查询再传参数
-    new PreRoom(client, body.gameId, 2);
+    this.customModeService.create(socket, body.gameId);
   }
 
-  @SubscribeMessage('join-preroom')
+  @SubscribeMessage(PreRoomEvent.JoinPreRoom)
   joinPreRoom(
     @MessageBody() body: JoinPreRoomReq,
     @ConnectedSocket() socket: Socket,
   ) {
-    const client = Client.IdMap.get(socket);
-    const { roomId, gameId } = body;
-
-    const preRoom = PreRoom.IdMap.get(roomId);
-    if (preRoom?.gameId !== gameId) return ;
-
-    preRoom.join(client);
+    this.customModeService.join(socket, body.roomId, body.gameId);
   }
 
   @SubscribeMessage('join-live')
