@@ -1,8 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { useContainer } from 'class-validator';
-import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import './soku-games';
+import {
+  AuthorizationValidationErrorFilter,
+  FormatValidationErrorFilter,
+  FormatValidationErrorPipe,
+  InternalErrorFilter,
+} from '@/response';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -11,7 +16,12 @@ async function bootstrap() {
 
   // 开启格式验证
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalFilters(
+    new InternalErrorFilter(),
+    new FormatValidationErrorFilter(),
+    new AuthorizationValidationErrorFilter(),
+  );
+  app.useGlobalPipes(new FormatValidationErrorPipe());
 
   // 开始监听
   await app.listen(3000);

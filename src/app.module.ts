@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { fileLoader, TypedConfigModule } from 'nest-typed-config';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
@@ -8,6 +8,9 @@ import { AppService } from './app.service';
 import { AppConfig, schemeValidator } from './app.config';
 
 import { UserModule, AuthModule, SocketModule, GameModule, RateModule, BotModule, TapeModule } from './modules';
+import { TestController } from '@/modules/test';
+import { ReqResLoggerMiddleware } from '@/response';
+import { Log } from '@/entity';
 
 @Module({
   imports: [
@@ -43,8 +46,15 @@ import { UserModule, AuthModule, SocketModule, GameModule, RateModule, BotModule
     BotModule,
     TapeModule,
     SocketModule,
+    TypeOrmModule.forFeature([Log]),
   ],
-  controllers: [AppController],
+  controllers: [AppController, TestController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule{
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(ReqResLoggerMiddleware)
+      .forRoutes('/api/*');
+  }
+}

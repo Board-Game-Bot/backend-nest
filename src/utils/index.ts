@@ -15,3 +15,5 @@ export async function sleep(ms: number) {
 
 export * from './downloadGame';
 export * from './event-manager';
+export * from './json';
+export * from './request-ok';
