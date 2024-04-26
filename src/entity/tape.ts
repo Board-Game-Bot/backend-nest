@@ -1,35 +1,19 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity()
 export class Tape {
   @PrimaryColumn('varchar')
-    id: string;
+    Id: string;
+  @Column()
+    Name: string;
+  @Column('text', { nullable: true })
+    Description: string;
   @Column('varchar')
-    gameId: string;
+    GameId: string;
   @Column('json')
-    json: string;
-  @Column('varchar', { nullable: true })
-    userId: string;
+    Json: string;
+  @Column('varchar')
+    UserId: string;
   @CreateDateColumn()
-    uploadTime: Date;
-
-  @OneToMany(() => Participant, participant => participant.tape)
-    participants: Participant[];
-}
-
-@Entity()
-export class Participant {
-  @PrimaryColumn('varchar')
-    tapeId: string;
-  @PrimaryColumn('smallint')
-    index: number;
-  @Column('varchar', { nullable: true })
-    userId: string;
-  @Column('varchar', { nullable: true })
-    botId?: string;
-  @Column('boolean')
-    isWin: boolean;
-
-  @ManyToOne(() => Tape, tape => tape.participants)
-    tape: Tape;
+    CreateTime: Date;
 }

@@ -36,16 +36,16 @@ export class BotService {
     const { PageSize, PageOffset } = request;
     const filter = request.Filter ?? {};
     const q = this.botDao.createQueryBuilder('bot');
-    if (filter.UserIds) {
+    if (filter.UserIds?.length > 0) {
       q.andWhere('bot.UserId IN (:...UserIds)', { UserIds: filter.UserIds });
     }
-    if (filter.GameIds) {
+    if (filter.GameIds?.length > 0) {
       q.andWhere('bot.GameId IN (:...GameIds)', { GameIds: filter.GameIds });
     }
-    if (filter.Langs) {
+    if (filter.Langs?.length > 0) {
       q.andWhere('bot.Lang IN (:...Langs)', { Langs: filter.Langs });
     }
-    if (filter.Statuses) {
+    if (filter.Statuses?.length > 0) {
       q.andWhere('bot.Status IN (:...Statuses)', { Statuses: filter.Statuses });
     }
     q.select(['Id', 'Name', 'Description', 'GameId', 'Lang', 'CreateTime', 'Status', 'StatusMessage', 'UserId'].map(col => `bot.${col}`))

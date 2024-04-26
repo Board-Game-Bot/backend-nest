@@ -5,11 +5,11 @@ import { GameIdExistValidator } from '@/modules/game/game-id-validator';
 import { CommonListRequest, CommonListResponse } from '@/response';
 import { BotIdExistValidator } from '@/modules/bot/bot-id-validator';
 
-const NameRegex = () => Matches(/^\w{1,18}$/);
+const NameRegex = () => Matches(/^\w{1,32}$/);
 
 export class CreateBotRequest {
   @IsOptional()
-  @Length(1, 18)
+  @Length(1, 32)
   @NameRegex()
     Name?: string;
   @IsOptional()
@@ -48,7 +48,7 @@ export class UpdateBotRequest {
   @Validate(BotIdExistValidator)
     Id: string;
   @IsOptional()
-  @Length(1, 18)
+  @Length(1, 32)
   @NameRegex()
     Name?: string;
   @IsOptional()

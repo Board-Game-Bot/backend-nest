@@ -7,7 +7,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AppConfig, schemeValidator } from './app.config';
 
-import { UserModule, AuthModule, GameModule, BotModule } from './modules';
+import { UserModule, AuthModule, GameModule, BotModule, TapeModule } from './modules';
 import { TestController } from '@/modules/test';
 import { ReqResLoggerMiddleware } from '@/response';
 import { Log } from '@/entity';
@@ -43,8 +43,8 @@ import { Log } from '@/entity';
     AuthModule,
     GameModule,
     BotModule,
+    TapeModule,
     // RateModule,
-    // TapeModule,
     // SocketModule,
     TypeOrmModule.forFeature([Log]),
   ],
