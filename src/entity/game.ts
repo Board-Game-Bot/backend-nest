@@ -3,17 +3,15 @@ import { Column, Entity, PrimaryColumn } from 'typeorm';
 @Entity()
 export class Game {
   @PrimaryColumn({ type: 'varchar' })
-    id: string;
+    Id: string;
   @Column({ type: 'text' })
-    description: string;
+    Description?: string;
   @Column()
-    icon: string;
+    Icon: string;
   @Column({ type: 'smallint' })
-    playerCount: number;
-  @Column({ type: 'varchar', default: 'demo' })
-    npmPackage: string;
-  @Column({ type: 'varchar', default: '0.0.0' })
-    version: string;
-  @Column({ type: 'varchar', default: '' })
-    url: string;
+    PlayerCount: number;
+  @Column({ type: 'varchar' })
+    NpmPackage: string;
+  @Column({ type: 'varchar' })
+    Version: string;
 }

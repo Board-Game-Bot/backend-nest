@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { UpdateGameRequest } from './dtos';
 import { Game } from '@/entity/game';
 
 @Injectable()
@@ -8,33 +9,36 @@ export class GameService {
   @InjectRepository(Game)
     gameDao: Repository<Game>;
 
-  async getAll() {
+  async createGame(game: Game) {
+    await this.gameDao.save({ ...game });
+    return game.Id;
+  }
+
+  async listGames(request: any) {
+    const { PageOffset, PageSize } = request;
+    const itemsPromise = this.gameDao.find({
+      skip: PageOffset,
+      take: PageSize,
+      select: ['Id', 'Icon', 'PlayerCount', 'NpmPackage', 'Version'],
+    });
+    const totalCountPromise = this.gameDao.count();
+    const [items, totalCount] = await Promise.all([itemsPromise, totalCountPromise]);
     return {
-      games: await this.gameDao.find(),
+      TotalCount: totalCount,
+      Items: items,
     };
   }
 
-  async listGames() {
-    return {
-      items: await this.gameDao.find(),
-    };
+  async getGame(id: string) {
+    return await this.gameDao.findOneBy({ Id: id });
   }
 
-  async create(game: Game) {
-    try {
-      await this.gameDao.save({
-        ...game,
-        playerCount: parseInt(game.playerCount + ''),
-      });
-      return;
-    }
-    catch (e) {
-      console.log(e.message);
-      throw new HttpException('Create Game Error', HttpStatus.BAD_REQUEST);
-    }
+  async updateGame(request: UpdateGameRequest) {
+    const { Id } = request;
+    await this.gameDao.update(Id, request);
   }
 
-  async delete(id: string) {
+  async deleteGame(id: string) {
     try {
       await this.gameDao.delete(id);
       return ;
@@ -43,10 +47,5 @@ export class GameService {
       console.log(e.message);
       throw new HttpException('Delete Game Error', HttpStatus.BAD_REQUEST);
     }
-  }
-
-  async get(id: string) {
-    const game = await this.gameDao.findOneBy({ id });
-    return game;
   }
 }
