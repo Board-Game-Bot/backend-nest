@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import './soku-games';
 import {
   AuthorizationValidationErrorFilter,
+  BusinessErrorFilter,
   FormatValidationErrorFilter,
   FormatValidationErrorPipe,
   InternalErrorFilter,
@@ -18,10 +19,11 @@ async function bootstrap() {
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   app.useGlobalFilters(
     new InternalErrorFilter(),
+    new BusinessErrorFilter(),
     new FormatValidationErrorFilter(),
     new AuthorizationValidationErrorFilter(),
   );
-  app.useGlobalPipes(new FormatValidationErrorPipe());
+  app.useGlobalPipes(new FormatValidationErrorPipe({ transform: true }));
 
   // 开始监听
   await app.listen(3000);

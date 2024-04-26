@@ -1,7 +1,11 @@
+import { IsInt, IsNumberString } from 'class-validator';
+import { Type } from 'class-transformer';
+
 export enum ResponseResult {
     Success = 'Success',
     FormatError = 'FormatError',
     AuthorizationError = 'AuthorizationError',
+    BusinessError = 'BusinessError',
     InternalError = 'InternalError',
     FrontEndError = 'FrontEndError',
 }
@@ -24,6 +28,11 @@ export interface AuthorizationErrorResponse extends WithRequestId {
     ResultType: ResponseResult.AuthorizationError;
 }
 
+export interface BusinessErrorResponse extends WithRequestId {
+    ResultType: ResponseResult.BusinessError;
+    Message: string;
+}
+
 export interface InternalErrorResponse extends WithRequestId {
     ResultType: ResponseResult.InternalError;
     // 不暴露给前端
@@ -38,6 +47,7 @@ export interface FrontEndErrorResponse {
 export type ErrorResponse =
     | FormatErrorResponse
     | AuthorizationErrorResponse
+    | BusinessErrorResponse
     | InternalErrorResponse
     | FrontEndErrorResponse;
 
@@ -45,3 +55,17 @@ export type Response =
     | SuccessResponse
     | ErrorResponse;
 
+export class CommonListRequest<F = Record<string, never>> {
+    @IsInt()
+    @Type(() => Number)
+      PageSize = 10;
+    @IsInt()
+    @Type(() => Number)
+      PageOffset = 0;
+    Filter?: F;
+}
+
+export interface CommonListResponse<B> {
+    TotalCount: number;
+    Items: B[];
+}

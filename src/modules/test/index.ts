@@ -6,7 +6,7 @@ import { AuthGuard } from '@/modules/auth/guard/auth.guard';
 export class TestController {
   @Post('/TestFoo')
   async test(@Body() body: FooRequest) {
-    console.log(body);
+
     return ;
   }
 
