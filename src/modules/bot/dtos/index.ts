@@ -1,60 +1,69 @@
-import { IsOptional, Length } from 'class-validator';
+import { IsNotEmpty, IsOptional, Length, Matches, Validate } from 'class-validator';
 import { Bot } from '@/entity';
 import { BotStatus } from '@/types';
+import { GameIdExistValidator } from '@/modules/game/game-id-validator';
+import { CommonListRequest, CommonListResponse } from '@/response';
+import { BotIdExistValidator } from '@/modules/bot/bot-id-validator';
 
-// require jwt
-export class CreateDto {
-  gameId: string;
-  langId: string;
-  @Length(0, 32)
+export class CreateBotRequest {
   @IsOptional()
-    name?: string;
-  @Length(0, 64)
+  @Length(1, 18)
+  @Matches(/^\w{1,18}$/)
+    Name?: string;
   @IsOptional()
-    description?: string;
-  code: string;
+  @Length(0, 300)
+    Description?: string;
+  @IsNotEmpty()
+  @Validate(GameIdExistValidator)
+    GameId: string;
+  @IsNotEmpty()
+    Lang: string;
+  @IsNotEmpty()
+    Code: string;
 }
 
-export interface CreateVo extends Bot { }
-
-export interface GetVo {
-  bots: Exclude<Bot, 'code'>[];
+export class ListBotsFilter {
+  GameIds?: string[];
+  Langs?: string;
+  Statuses?: BotStatus[];
+  UserIds?: string[];
 }
 
-export interface CodeVo {
-  code: string;
+export class ListBotsRequest extends CommonListRequest<ListBotsFilter> {}
+
+export interface ListBotsResponse extends CommonListResponse<Bot> {}
+
+export class OnlyIdRequest {
+  @IsNotEmpty()
+  @Validate(BotIdExistValidator)
+    Id: string;
 }
 
-// require jwt
-export class UpdateDto {
-  id: string;
+export class GetBotRequest extends OnlyIdRequest {}
+
+export class UpdateBotRequest {
+  @IsNotEmpty()
+  @Validate(BotIdExistValidator)
+    Id: string;
   @IsOptional()
-    gameId: string;
+  @Length(1, 18)
+  @Matches(/^\w{1,18}$/)
+    Name?: string;
   @IsOptional()
-    langId: string;
+  @Length(0, 300)
+    Description?: string;
   @IsOptional()
-  @Length(1, 32)
-    name: string;
-  @IsOptional()
-  @Length(0, 64)
-    description: string;
-  @IsOptional()
-    isPublic: boolean;
-  @IsOptional()
-    code: string;
+    Code?: string;
 }
 
-export class OnlyIdDto {
-  id: string;
-}
+export class DeleteBotRequest extends OnlyIdRequest { }
 
-// require jwt
-export class DeleteDto {
-  botId: string;
-}
+export class StartBotRequest extends OnlyIdRequest { }
 
-export class InnerUpdateStatusDto {
-  containerId: string;
-  status: BotStatus;
-  message?: string;
+export class StopBotRequest extends OnlyIdRequest { }
+
+export class InnerUpdateStatusRequest {
+  ContainerId: string;
+  Status: BotStatus;
+  Message?: string;
 }

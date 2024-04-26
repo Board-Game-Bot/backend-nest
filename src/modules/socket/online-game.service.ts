@@ -26,7 +26,7 @@ export class OnlineGameService {
     const bots = await Promise.all(
       room.players.map(async ({ botId }) => {
         if (botId) {
-          return await this.botService.getOne(botId);
+          return await this.botService.getBot(botId);
         }
         return null;
       }),

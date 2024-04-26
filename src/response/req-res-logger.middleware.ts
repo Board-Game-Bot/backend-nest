@@ -4,16 +4,21 @@ import { assign, omit } from 'lodash';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Response as CommonResponse, ResponseResult } from './types';
-import { safeJsonStringify } from '@/utils';
+import { MakeIdGenerator, safeJsonStringify } from '@/utils';
 import { Log } from '@/entity';
-import { generateId } from '@/response/utils';
+
 
 @Injectable()
 export class ReqResLoggerMiddleware implements NestMiddleware {
   @InjectRepository(Log)
     logDao: Repository<Log>;
 
+  static generateId: () => string;
+
   async use(req: Request, res: Response, next: NextFunction) {
+    if (!ReqResLoggerMiddleware.generateId) {
+      ReqResLoggerMiddleware.generateId = MakeIdGenerator('log');
+    }
     const originJson = res.json.bind(res);
 
     assign(res, {
@@ -24,7 +29,7 @@ export class ReqResLoggerMiddleware implements NestMiddleware {
           const ResBody = payload as CommonResponse;
 
 
-          const reqId = generateId();
+          const reqId = ReqResLoggerMiddleware.generateId();
           if (ResBody.ResultType && ResBody.ResultType !== ResponseResult.Success) {
             const message = safeJsonStringify({ ReqHeader, ReqBody, ResBody });
             this.logDao.save({
@@ -39,7 +44,7 @@ export class ReqResLoggerMiddleware implements NestMiddleware {
           }, 'ErrorMessage'));
         }
         catch (e) {
-          res.json({
+          originJson({
             RequestId: 'Logger panic!',
             ResultType: ResponseResult.InternalError,
             Error: e,

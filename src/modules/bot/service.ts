@@ -1,13 +1,14 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { nanoid } from 'nanoid';
-import { omit } from 'lodash';
-import { CodeVo, CreateDto, CreateVo, GetVo, UpdateDto } from './dtos';
+import { pick } from 'lodash';
+import { CreateBotRequest, ListBotsRequest, UpdateBotRequest } from './dtos';
+import { generateId } from './utils';
 import { Bot } from '@/entity';
-import { makeFailure } from '@/utils';
+import { RequestFail } from '@/utils';
 import { BotRunService } from '@/modules/botrun/services';
 import { BotStatus } from '@/types';
+
 
 @Injectable()
 export class BotService {
@@ -17,163 +18,126 @@ export class BotService {
   @Inject()
     botRunService: BotRunService;
 
-  async create(userId: string, dto: CreateDto): Promise<CreateVo> {
-    try {
-      const { name, description } = dto;
-      return await this.botDao.save({
-        id: nanoid(),
-        userId,
-        ...dto,
-        name: name || 'MyBot',
-        description: description || '作者很懒，没有任何简介。',
-        isPublic: false,
-      });
+  async createBot(userId: string, request: CreateBotRequest) {
+    const id = generateId();
+    if (!request.Name) {
+      request.Name = id;
     }
-    catch (e) {
-      console.log('create bot error: ', e.message);
-      makeFailure(e.message);
-    }
-  }
 
-  async getOne(botId: string) {
-    return await this.botDao.findOneBy({ id: botId });
-  }
-
-  async get(userId: string, pageIndex: number, pageSize: number): Promise<GetVo> {
-    try {
-      const bots = await this.botDao.find({
-        select: {
-          code: false,
-        },
-        where: {
-          userId,
-        },
-        order: {
-          createTime: 'DESC',
-        },
-        skip: pageIndex * pageSize,
-        take: pageSize,
-      });
-      return {
-        bots: bots.map(bot => omit(bot, 'containerId')),
-      };
-    }
-    catch (e) {
-      console.log('get bot error: ', e);
-      throw new Error('get bot error');
-    }
-  }
-
-  async game(userId: string, gameId: string) {
-    return await this.botDao.findBy({
-      userId,
-      gameId,
+    await this.botDao.save({
+      Id: id,
+      UserId: userId,
+      ...request,
     });
+    return id;
   }
 
-  async code(userId: string, botId: string): Promise<CodeVo> {
-    try {
-      return await this.botDao.findOne({
-        select: ['code'],
-        where: {
-          id: botId,
-          userId,
-        },
-      });
+  async listBots(request: ListBotsRequest) {
+    const { PageSize, PageOffset } = request;
+    const filter = request.Filter ?? {};
+    const q = this.botDao.createQueryBuilder('bot');
+    if (filter.UserIds) {
+      q.andWhere('bot.UserId IN (:...UserIds)', { UserIds: filter.UserIds });
     }
-    catch (e) {
-      console.log('code bot error:', e);
-      throw new Error('code bot error');
+    if (filter.GameIds) {
+      q.andWhere('bot.GameId IN (:...GameIds)', { GameIds: filter.GameIds });
     }
+    if (filter.Langs) {
+      q.andWhere('bot.Lang IN (:...Langs)', { Langs: filter.Langs });
+    }
+    if (filter.Statuses) {
+      q.andWhere('bot.Status IN (:...Statuses)', { Statuses: filter.Statuses });
+    }
+    q.select(['Id', 'Name', 'Description', 'GameId', 'Lang', 'CreateTime', 'Status', 'StatusMessage', 'UserId'].map(col => `bot.${col}`))
+      .skip(PageOffset)
+      .take(PageSize);
+    const [items, totalCount] = await q.getManyAndCount();
+
+    return {
+      TotalCount: totalCount,
+      Items: items,
+    };
   }
 
-  async update(userId: string, dto: UpdateDto): Promise<void> {
-    try {
-      await this.botDao.findOneByOrFail({
-        id: dto.id,
-        userId,
-      });
-      await this.botDao.update(dto.id, {
-        ...dto,
-      });
-      return ;
-    }
-    catch (e) {
-      console.log('update bot error: ', e);
-      makeFailure('update bot error');
-    }
+  async getBot(id: string) {
+    return await this.botDao.findOneBy({ Id: id });
   }
 
-  async compile(userId: string, botId: string): Promise<void> {
-    try {
-      const bot = await this.botDao.findOneByOrFail({
-        id: botId,
-        userId,
-      });
-      await this.botDao.update(botId, {
-        status: BotStatus.Deploying,
-      });
+  async updateBot(userId: string, request: UpdateBotRequest) {
 
-      (async () => {
-        const containerId = await this.botRunService.createContainer(bot.langId, bot.code);
-        await this.botDao.update(botId, {
-          containerId,
+    if (!await this.isPermitted(userId, request.Id)) {
+      RequestFail('You are not permitted to update this Bot.');
+    }
+    await this.botDao.update(request.Id, pick(request, ['Id', 'Description', 'Code', 'Name']));
+  }
+
+  async deleteBot(userId: string, id: string) {
+    if (!await this.isPermitted(userId, id)) {
+      RequestFail('You are not permitted to delete this Bot.');
+    }
+    await this.botDao.delete(id);
+  }
+
+  async startBot(userId: string, id: string) {
+    if (!await this.isPermitted(userId, id)) {
+      RequestFail('You are not permitted to start this Bot.');
+    }
+    const bot = await this.botDao.findOneBy({
+      UserId: userId,
+      Id: id,
+    });
+    if (![BotStatus.Hibernating, BotStatus.Failed].includes(bot.Status)) {
+      RequestFail('You can start the bot only when is in hibernating or failed status.');
+    }
+    await this.botDao.update(id, {
+      Status: BotStatus.Deploying,
+    });
+    this.botRunService.createContainer(bot.Lang, bot.Code)
+      .then(async containerId => {
+        await this.botDao.update(id, {
+          ContainerId: containerId,
         });
-        this.botRunService.compile(containerId);
-      })();
-      return ;
-    }
-    catch(e) {
-      console.log('compile bot error: ', e);
-      makeFailure('compile bot error');
-    }
-  }
-
-  async stop(userId: string, botId: string): Promise<void> {
-    try {
-      const bot = await this.botDao.findOneByOrFail({
-        id: botId,
-        userId,
+        await this.botRunService.compile(containerId);
       });
-      const containerId = bot.containerId;
-      await this.botDao.update(botId, {
-        status: BotStatus.Terminating,
-      });
-      this.botRunService.stop(containerId);
-    }
-    catch (e) {
-      console.log('stop bot error: ', e);
-      makeFailure('stop bot error');
-    }
+    return ;
   }
 
-  async delete(userId: string, botId: string): Promise<void> {
-    try {
-      const bot = await this.botDao.findOneBy({ id: botId, userId });
-      if (!bot)
-        return;
-      const containerId = bot.containerId;
-      if (containerId) {
-        this.botRunService.stop(containerId);
-      }
-      await this.botDao.delete(botId);
-      return;
+  async stopBot(userId: string, id: string) {
+    if (!await this.isPermitted(userId, id)) {
+      RequestFail('You are not permitted to stop this Bot.');
     }
-    catch (e) {
-      console.log('delete bot error: ', e);
-      throw new Error('delete bot error');
+    const bot = await this.botDao.findOneBy({
+      UserId: userId,
+      Id: id,
+    });
+    if (bot.Status !== BotStatus.Working) {
+      RequestFail('You can stop the bot only when is in working status.');
     }
+    const containerId = bot.ContainerId;
+    await this.botDao.update(id, {
+      Status: BotStatus.Terminating,
+    });
+    this.botRunService.stop(containerId);
   }
 
-  async innerUpdateStatus(containerId: string, status: BotStatus, message?: string): Promise<void> {
+  async innerUpdateBotStatus(containerId: string, status: BotStatus, message?: string): Promise<void> {
     try {
-      await this.botDao.update({ containerId }, {
-        status,
-        statusMessage: message,
+      await this.botDao.update({ ContainerId: containerId }, {
+        Status: status,
+        StatusMessage: message,
       });
     }
     catch {
       throw new Error('update bot status error') ;
     }
+  }
+
+  async isPermitted(userId: string, id: string) {
+    return await this.botDao.exist({
+      where: {
+        Id: id,
+        UserId: userId,
+      },
+    });
   }
 }
