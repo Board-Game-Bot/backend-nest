@@ -38,6 +38,8 @@ export class TapeService {
     if (filter.UserIds?.length > 0) {
       q.andWhere('tape.UserId IN (:...UserIds)', filter);
     }
+
+    q.select(<(keyof Tape)[]>['Id', 'Name', 'Description', 'GameId', 'UserId', 'CreateTime'].map(field => `tape.${field}`));
     q.skip(PageOffset).take(PageSize);
     const [items, totalCount] = await q.getManyAndCount();
     return {
