@@ -1,14 +1,12 @@
 import { IsOptional, IsString, Length, Matches } from 'class-validator';
 
-export class UpdateDto {
+export class UpdateUserRequest {
   @IsOptional()
   @IsString()
   @Length(6, 18)
-  @Matches(/^[a-zA-Z][a-zA-Z0-9_.]*$/)
-    name?: string;
+  @Matches(/^\w*$/)
+    Name?: string;
   @IsOptional()
   @IsString()
-    avatar?: string;
+    Avatar?: string;
 }
-
-export interface UpdateVo {}

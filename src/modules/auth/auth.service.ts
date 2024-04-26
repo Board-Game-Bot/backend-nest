@@ -4,9 +4,9 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 
 import { encrypt, verify } from './utils';
-import { LoginDto, LoginVo, RegisterDto, RegisterVo } from './dtos';
+import { LoginAccountRequest, LoginAccountResponse, RegisterAccountRequest, RegisterAccountResponse } from './dtos';
 import { Auth, User } from '@/entity';
-import { makeFailure } from '@/utils';
+import { RequestFail } from '@/utils';
 
 @Injectable()
 export class AuthService {
@@ -17,76 +17,59 @@ export class AuthService {
   @Inject()
     jwtService: JwtService;
 
-  async register(dto: RegisterDto): Promise<RegisterVo> {
-    const { id, passwd, remember } = dto;
-
-    // 验证账户是否已存在
-    const existAuth = await this.authDao.findOneBy({
-      id,
-    });
-
-    if (existAuth)
-      makeFailure('账户已存在，请更换');
-
+  async registerAccount(dto: RegisterAccountRequest): Promise<RegisterAccountResponse> {
+    const { Id, Password } = dto;
     // 创建账户
     // 密码哈希
     await this.authDao.save({
       ...dto,
-      id,
-      passwd: await encrypt(passwd),
+      Password: await encrypt(Password),
     });
 
     // 创建用户
-    const user = await this.userDao.save({
-      id,
-      name: id,
-      avatar: 'https://sdfsdf.dev/100x100.png',
+    await this.userDao.save({
+      Id,
+      Name: Id,
+      Avatar: 'https://sdfsdf.dev/100x100.png',
     });
 
     // 生成JWT
-    const jwt = this.signIn(user.id, remember === 'on');
+    const jwt = this.signIn(Id, true);
 
     // 返回信息
-    return {
-      user,
-      jwt,
-    };
+    return { Jwt: jwt };
   }
 
-  async login(dto: LoginDto): Promise<LoginVo> {
-    const { id, passwd, remember } = dto;
+  async loginAccount(dto: LoginAccountRequest): Promise<LoginAccountResponse> {
+    const { Id, Password } = dto;
     // 查找是否存在这个账户
-    const existAuth = await this.authDao.findOneBy({ id });
-
-    if (!existAuth)
-      makeFailure('此用户不存在，检查账户是否正确');
+    const existAuth = await this.authDao.findOneBy({ Id });
 
     // 验证密码是否一致
-    const verifyResult = await verify(existAuth.passwd, passwd);
+    const verifyResult = await verify(existAuth.Password, Password);
 
     if (!verifyResult)
-      makeFailure('密码错误，请重新输入');
+      RequestFail('密码错误，请重新输入');
 
     // 是否存在此用户
-    const user = await this.userDao.findOneBy({ id: existAuth.id });
+    const user = await this.userDao.findOneBy({ Id });
 
     if (!user)
-      makeFailure('此用户不存在，可能已注销');
+      RequestFail('此用户不存在');
 
     // 成功，返回信息以及 JWT
-    const jwt = this.signIn(user.id, remember === 'on');
+    const jwt = this.signIn(Id, true);
 
     return {
-      user,
-      jwt,
+      Jwt: jwt,
     };
   }
 
   async isAdmin(auth: Auth) {
-    return auth.id === 'Andrew';
+    return auth.Id === 'Andrew';
   }
 
   signIn(id: string, remember: boolean) {
-    return this.jwtService.sign({ id }, { expiresIn: remember ? '14d' : '1d' });
+    return this.jwtService.sign({ Id: id }, { expiresIn: remember ? '14d' : '1d' });
   }
 }

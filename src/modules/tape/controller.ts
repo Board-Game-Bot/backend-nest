@@ -18,24 +18,24 @@ export class TapeController {
     @Query('pageIndex', ParseIntPipe) pageIndex: number,
     @Query('pageSize', ParseIntPipe) pageSize: number,
   ) {
-    return await this.tapeService.get(jwt.id, gameId, pageIndex, pageSize);
+    return await this.tapeService.get(jwt.Id, gameId, pageIndex, pageSize);
   }
 
   @UseGuards(AuthGuard)
   @Post('/upload')
   async upload(@Jwt() jwt: JwtType, @Body() body: UploadDto) {
-    return await this.tapeService.upload(jwt.id, body);
+    return await this.tapeService.upload(jwt.Id, body);
   }
 
   @UseGuards(AuthGuard)
   @Get('/json')
   async json(@Jwt() jwt: JwtType, @Query('tapeId') tapeId: string) {
-    return await this.tapeService.json(jwt.id, tapeId);
+    return await this.tapeService.json(jwt.Id, tapeId);
   }
 
   @UseGuards(AuthGuard)
   @Post('/delete')
   async delete(@Jwt() jwt: JwtType, @Body() dto: DeleteDto) {
-    return await this.tapeService.delete(jwt.id, dto.tapeId);
+    return await this.tapeService.delete(jwt.Id, dto.tapeId);
   }
 }

@@ -1,12 +1,10 @@
-import { Body, Controller, Get, Inject, Post, UseGuards } from '@nestjs/common';
-import { AuthGuard } from './guard/auth.guard';
-import { LoginDto, RegisterDto } from '@/modules/auth/dtos';
+import { Body, Controller, Inject, Post } from '@nestjs/common';
+import { LoginAccountRequest, RegisterAccountRequest } from '@/modules/auth/dtos';
 import { AuthService } from '@/modules/auth/auth.service';
-import { Jwt } from '@/common/decorators';
-import { JwtType } from '@/types';
 import { UserService } from '@/modules/user/user.service';
+import { RequestOk } from '@/utils';
 
-@Controller('/api/auth')
+@Controller('/api')
 export class AuthController {
   @Inject()
     authService: AuthService;
@@ -14,19 +12,13 @@ export class AuthController {
   @Inject()
     userService: UserService;
 
-  @Post('/register')
-  async register(@Body() dto: RegisterDto) {
-    return await this.authService.register(dto);
+  @Post('/RegisterAccount')
+  async registerAccount(@Body() request: RegisterAccountRequest) {
+    return RequestOk(await this.authService.registerAccount(request));
   }
 
-  @Post('/login')
-  async login(@Body() dto: LoginDto) {
-    return await this.authService.login(dto);
-  }
-
-  @Get('/load')
-  @UseGuards(AuthGuard)
-  async load(@Jwt() jwt: JwtType) {
-    return await this.userService.getProfile(jwt.id);
+  @Post('/LoginAccount')
+  async loginAccount(@Body() request: LoginAccountRequest) {
+    return RequestOk(await this.authService.loginAccount(request));
   }
 }
