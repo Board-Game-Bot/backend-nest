@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { pick } from 'lodash';
-import { CreateTapeRequest, DeleteTapeRequest, ListTapesRequest, UpdateTapeRequest } from './dtos';
 import { generateId } from './utils';
+import { CreateTapeRequest, DeleteTapeRequest, ListTapesRequest, UpdateTapeRequest } from '@/request';
 import { Tape } from '@/entity';
 import { RequestFail } from '@/utils';
 

@@ -1,10 +1,10 @@
 import { Body, Controller, Inject, Post, UseGuards } from '@nestjs/common';
+import { BotService } from './service';
 import {
   InnerUpdateStatusRequest,
   CreateBotRequest,
   ListBotsRequest, ListBotsResponse, GetBotRequest, UpdateBotRequest, DeleteBotRequest, StartBotRequest, StopBotRequest,
-} from './dtos';
-import { BotService } from './service';
+} from '@/request';
 import { AuthGuard } from '@/modules/auth/guard/auth.guard';
 import { Jwt } from '@/common/decorators';
 import { EmptyObject, JwtType, OnlyIdResponse } from '@/types';

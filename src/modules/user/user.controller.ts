@@ -7,10 +7,11 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/guard/auth.guard';
 import { UserService } from './user.service';
-import { UpdateUserRequest } from './dtos';
+
 import { Jwt } from '@/common/decorators';
 import { JwtType } from '@/types';
 import { RequestOk } from '@/utils';
+import { UpdateUserRequest } from '@/request';
 
 @Controller('/api')
 export class UserController {

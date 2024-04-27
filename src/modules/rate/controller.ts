@@ -7,7 +7,7 @@ import {
   ListRatesResponse,
   OnlyRateId,
   UpdateRateRequest,
-} from './dtos';
+} from '@/request';
 import { InnerGuard } from '@/modules/auth/guard/inner.guard';
 import { CommonResponseType, RequestOk } from '@/utils';
 import { Rate } from '@/entity/rate';

@@ -1,6 +1,6 @@
 import { Body, Controller, Inject, Post, UseGuards } from '@nestjs/common';
 import { TapeService } from './service';
-import { CreateTapeRequest, DeleteTapeRequest, GetTapeRequest, ListTapesRequest, UpdateTapeRequest } from './dtos';
+import { CreateTapeRequest, DeleteTapeRequest, GetTapeRequest, ListTapesRequest, UpdateTapeRequest } from '@/request';
 import { AuthGuard } from '@/modules/auth/guard/auth.guard';
 import { Jwt } from '@/common/decorators';
 import { JwtType, OnlyIdResponse } from '@/types';

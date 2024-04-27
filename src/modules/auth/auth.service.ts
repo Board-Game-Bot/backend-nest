@@ -4,9 +4,9 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 
 import { encrypt, verify } from './utils';
-import { LoginAccountRequest, LoginAccountResponse, RegisterAccountRequest, RegisterAccountResponse } from './dtos';
 import { Auth, User } from '@/entity';
 import { RequestFail } from '@/utils';
+import { LoginAccountRequest, LoginAccountResponse, RegisterAccountRequest, RegisterAccountResponse } from '@/request';
 
 @Injectable()
 export class AuthService {

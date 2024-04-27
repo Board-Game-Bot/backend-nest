@@ -8,20 +8,20 @@ import { BotIdExistValidator } from '@/modules/bot/bot-id-validator';
 const NameRegex = () => Matches(/^\w{1,32}$/);
 
 export class CreateBotRequest {
-  @IsOptional()
-  @Length(1, 32)
-  @NameRegex()
-    Name?: string;
-  @IsOptional()
-  @Length(0, 300)
-    Description?: string;
-  @IsNotEmpty()
-  @Validate(GameIdExistValidator)
-    GameId: string;
-  @IsNotEmpty()
-    Lang: string;
-  @IsNotEmpty()
-    Code: string;
+    @IsOptional()
+    @Length(1, 32)
+    @NameRegex()
+      Name?: string;
+    @IsOptional()
+    @Length(0, 300)
+      Description?: string;
+    @IsNotEmpty()
+    @Validate(GameIdExistValidator)
+      GameId: string;
+    @IsNotEmpty()
+      Lang: string;
+    @IsNotEmpty()
+      Code: string;
 }
 
 export class ListBotsFilter {
@@ -36,26 +36,26 @@ export class ListBotsRequest extends CommonListRequest<ListBotsFilter> {}
 export interface ListBotsResponse extends CommonListResponse<Bot> {}
 
 export class OnlyIdRequest {
-  @IsNotEmpty()
-  @Validate(BotIdExistValidator)
-    Id: string;
+    @IsNotEmpty()
+    @Validate(BotIdExistValidator)
+      Id: string;
 }
 
 export class GetBotRequest extends OnlyIdRequest {}
 
 export class UpdateBotRequest {
-  @IsNotEmpty()
-  @Validate(BotIdExistValidator)
-    Id: string;
-  @IsOptional()
-  @Length(1, 32)
-  @NameRegex()
-    Name?: string;
-  @IsOptional()
-  @Length(0, 300)
-    Description?: string;
-  @IsOptional()
-    Code?: string;
+    @IsNotEmpty()
+    @Validate(BotIdExistValidator)
+      Id: string;
+    @IsOptional()
+    @Length(1, 32)
+    @NameRegex()
+      Name?: string;
+    @IsOptional()
+    @Length(0, 300)
+      Description?: string;
+    @IsOptional()
+      Code?: string;
 }
 
 export class DeleteBotRequest extends OnlyIdRequest { }

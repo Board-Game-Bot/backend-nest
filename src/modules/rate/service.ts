@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { pick } from 'lodash';
-import { CreateRateRequest, GetRateRequest, ListRatesRequest, OnlyRateId, UpdateRateRequest } from './dtos';
+import { CreateRateRequest, GetRateRequest, ListRatesRequest, OnlyRateId, UpdateRateRequest } from '@/request';
 import { Rate } from '@/entity/rate';
 import { RequestFail } from '@/utils';
 

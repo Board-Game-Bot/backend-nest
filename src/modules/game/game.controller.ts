@@ -7,11 +7,10 @@ import {
   ListGamesRequest,
   ListGamesResponse,
   UpdateGameRequest,
-} from './dtos';
+} from '@/request';
 import { Game } from '@/entity';
 import { AdminGuard } from '@/modules/auth/guard/admin.guard';
 import { CommonResponseType, downloadGame, RequestOk } from '@/utils';
-import { OnlyIdRequest } from '@/types';
 
 @Controller('/api')
 export class GameController {

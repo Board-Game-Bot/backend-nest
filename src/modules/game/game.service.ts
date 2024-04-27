@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UpdateGameRequest } from './dtos';
+import { UpdateGameRequest } from '@/request';
 import { Game } from '@/entity/game';
 
 @Injectable()
