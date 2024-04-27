@@ -67,7 +67,12 @@ export class OnlineGameService {
           const player = room.players[i];
           const newScore = player.score + 3 * parseInt(score);
           try {
-            await this.rateService.updateRate(player.playerId, room.gameId, player.botId, newScore);
+            await this.rateService.updateRate({
+              UserId: player.playerId,
+              GameId: room.gameId,
+              BotId: player.botId ?? '',
+              Score: newScore,
+            });
           }
           catch (e) {
             console.log('error', e);
