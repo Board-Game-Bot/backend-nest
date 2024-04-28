@@ -1,129 +1,74 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
-import { nanoid } from 'nanoid';
-import { CreateTapeDto, RequestMyTapeDto, RequestTapeDto, UploadDto } from './dtos';
-import { Participant, Tape } from '@/entity';
+import { Repository } from 'typeorm';
+import { pick } from 'lodash';
+import { generateId } from './utils';
+import { CreateTapeRequest, DeleteTapeRequest, ListTapesRequest, UpdateTapeRequest } from '@/request';
+import { Tape } from '@/entity';
+import { RequestFail } from '@/utils';
 
 @Injectable()
 export class TapeService {
   @InjectRepository(Tape)
     tapeDao: Repository<Tape>;
-  @InjectRepository(Participant)
-    participantDao: Repository<Participant>;
 
-  dataSource: DataSource;
-
-  async upload(userId: string, dto: UploadDto) {
-    try {
-      await this.tapeDao.save({
-        id: nanoid(),
-        ...dto,
-        uploadTime: new Date(),
-        userId,
-      });
-    }
-    catch {
-      throw new Error('upload tape error');
-    }
+  async createTape(userId: string, request: CreateTapeRequest) {
+    const filteredRequest = pick(request, ['Name', 'Description', 'GameId', 'Json']);
+    const id = generateId();
+    await this.tapeDao.save({
+      Id: id,
+      ...filteredRequest,
+      Name: filteredRequest.Name ?? id,
+      UserId: userId,
+    });
+    return id;
   }
 
-  async get(userId: string, gameId: string, pageIndex: number, pageSize: number) {
-    try {
-      return {
-        tapes: await this.tapeDao.find({
-          select: {
-            id: true,
-            gameId: true,
-            uploadTime: true,
-          },
-          where: { userId, gameId },
-          order: {
-            uploadTime: 'DESC',
-          },
-          skip: pageIndex * pageSize,
-          take: pageSize,
-        }),
-      };
-    }
-    catch {
-      throw new Error('get tapes error');
-    }
+  async getTape(id: string) {
+    return await this.tapeDao.findOneBy({ Id: id });
   }
 
-  async json(userId: string, tapeId: string) {
-    const result = await this.tapeDao.findOne({
-      select: {
-        json: true,
-      },
+  async listTapes(request: ListTapesRequest) {
+    const { PageOffset, PageSize } = request;
+    const filter = request.Filter ?? {};
+    const q = this.tapeDao.createQueryBuilder('tape');
+    if (filter.GameIds?.length > 0) {
+      q.andWhere('tape.GameId IN (:...GameIds)', filter);
+    }
+    if (filter.UserIds?.length > 0) {
+      q.andWhere('tape.UserId IN (:...UserIds)', filter);
+    }
+
+    q.select(<(keyof Tape)[]>['Id', 'Name', 'Description', 'GameId', 'UserId', 'CreateTime'].map(field => `tape.${field}`));
+    q.addOrderBy('CreateTime', 'DESC').skip(PageOffset).take(PageSize);
+    const [items, totalCount] = await q.getManyAndCount();
+    return {
+      TotalCount: totalCount,
+      Items: items,
+    };
+  }
+
+  async updateTape(userId: string, request: UpdateTapeRequest) {
+    const filteredRequest = pick(request, ['Id', 'Name', 'Description']);
+    if (!await this.isPermitted(userId, filteredRequest.Id)) {
+      RequestFail('You are not permitted to update this Tape.');
+    }
+    await this.tapeDao.update(filteredRequest.Id, filteredRequest);
+  }
+
+  async deleteTape(userId: string, request: DeleteTapeRequest) {
+    if (!await this.isPermitted(userId, request.Id)) {
+      RequestFail('You are not permitted to update this Tape.');
+    }
+    await this.tapeDao.delete(request.Id);
+  }
+
+  async isPermitted(userId: string, id: string) {
+    return await this.tapeDao.exist({
       where: {
-        id: tapeId,
-        userId,
+        UserId: userId,
+        Id: id,
       },
     });
-    return result;
-  }
-
-  async createTapeWithParticipants(dto: CreateTapeDto) {
-    try {
-      let newTape: Tape;
-      await this.dataSource.transaction(async manager => {
-        const tape = await manager.save(Tape, {
-          gameId: dto.gameId,
-          json: JSON.stringify(dto.json),
-        });
-        const participants = dto.participants.map(p => ({
-          ...p,
-          tapeId: tape.id,
-        }));
-        await manager.save(Participant, participants);
-        newTape = tape;
-      });
-      return newTape;
-    }
-    catch (e) {
-      throw new Error('create tape error');
-    }
-  }
-
-  async requestTape(dto: RequestTapeDto) {
-    try {
-      const { id: tapeId } = dto;
-      return await this.tapeDao
-        .createQueryBuilder('tape')
-        .leftJoinAndSelect('tape.participants', 'p')
-        .where('p.tapeId = :tapeId', { tapeId })
-        .select(['tape.id', 'tape.gameId', 'tape.json', 'p.index', 'p.botId', 'p.isWin', 'p.userId'])
-        .getOne();
-    }
-    catch (e) {
-      throw new Error('request tape error');
-    }
-  }
-
-  async requestMyTape(userId: string, dto: RequestMyTapeDto) {
-    try {
-      return {
-        tapes: await this.tapeDao.findBy({
-          userId,
-        }),
-      };
-    }
-    catch (e) {
-      throw new Error('request my tape error');
-    }
-  }
-
-  async delete(userId: string, tapeId: string) {
-    try {
-      await this.tapeDao.delete({
-        userId,
-        id: tapeId,
-      });
-      return ;
-    }
-    catch (e) {
-      throw new Error('delete tape error');
-    }
   }
 }

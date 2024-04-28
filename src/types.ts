@@ -1,5 +1,5 @@
 export interface JwtType {
-  id: string;
+  Id: string;
 }
 
 export type MaybePromise<T> = T | Promise<T>;
@@ -11,3 +11,13 @@ export enum BotStatus {
   Terminating = 'Terminating',
   Failed = 'Failed',
 }
+
+export interface OnlyIdRequest {
+  Id: string;
+}
+
+export interface OnlyIdResponse {
+  Id: string;
+}
+
+export type EmptyObject = Record<string, never>

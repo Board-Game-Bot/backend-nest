@@ -80,7 +80,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const result = this.matchPoolService.tryToAddPlayer(
       gameId,
       client.playerId,
-      score.score,
+      score.Score,
       botId,
       socket,
     );
@@ -129,7 +129,11 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     room.join(playerId, socket);
   }
 
-  async getScore(gameId: string, playerId: string, botId: string) {
-    return await this.rateService.findRate(playerId, gameId, botId);
+  async getScore(gameId: string, playerId: string, botId?: string) {
+    return await this.rateService.getRate({
+      UserId: playerId,
+      GameId: gameId,
+      BotId: botId ?? '',
+    });
   }
 }

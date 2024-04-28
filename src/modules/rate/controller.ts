@@ -1,17 +1,44 @@
-import { Controller, Get, Inject, Query } from '@nestjs/common';
+import { Body, Controller, Inject, Post, UseGuards } from '@nestjs/common';
 import { RateService } from './service';
+import {
+  CreateRateRequest,
+  GetRateRequest,
+  ListRatesRequest,
+  ListRatesResponse,
+  OnlyRateId,
+  UpdateRateRequest,
+} from '@/request';
+import { InnerGuard } from '@/modules/auth/guard/inner.guard';
+import { CommonResponseType, RequestOk } from '@/utils';
+import { Rate } from '@/entity/rate';
+import { EmptyObject } from '@/types';
 
-@Controller('/api/rate')
+@Controller('/api')
 export class RateController {
   @Inject()
     rateService: RateService;
 
-  @Get('/get')
-  async get(
-    @Query('gameId') gameId: string,
-    @Query('pageIndex') pageIndex: number,
-    @Query('pageSize') pageSize: number,
-  ) {
-    return await this.rateService.get(gameId, pageIndex, pageSize);
+  @UseGuards(InnerGuard)
+  @Post('/CreateRate')
+  async createRate(@Body() request: CreateRateRequest): CommonResponseType<OnlyRateId> {
+    const id = await this.rateService.createRate(request);
+    return RequestOk(id);
+  }
+
+  @Post('/GetRate')
+  async getRate(@Body() request: GetRateRequest): CommonResponseType<Rate> {
+    return RequestOk(await this.rateService.getRate(request));
+  }
+
+  @Post('/ListRates')
+  async listRates(@Body() request: ListRatesRequest): CommonResponseType<ListRatesResponse> {
+    return RequestOk(await this.rateService.listRates(request));
+  }
+
+
+  @Post('/UpdateRate')
+  async updateRate(@Body() request: UpdateRateRequest): CommonResponseType<EmptyObject> {
+    await this.rateService.updateRate(request);
+    return RequestOk({});
   }
 }

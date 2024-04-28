@@ -11,8 +11,8 @@ export class CustomModeService {
     async create(socket: Socket, gameId: string) {
       const client = Client.IdMap.get(socket);
 
-      const game = await this.gameService.get(gameId);
-      const playerCount = game.playerCount;
+      const game = await this.gameService.getGame(gameId);
+      const playerCount = game.PlayerCount;
 
       new PreRoom(client, gameId, playerCount);
     }

@@ -28,7 +28,7 @@ export class AdminGuard implements CanActivate {
     }
     try {
       const user: Auth = this.jwtService.verify(token);
-      if (user.id !== 'Andrew') {
+      if (user.Id !== 'Andrew') {
         throw new UnauthorizedException();
       }
       try {

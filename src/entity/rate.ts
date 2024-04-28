@@ -3,11 +3,14 @@ import { Column, Entity, PrimaryColumn } from 'typeorm';
 @Entity()
 export class Rate {
   @PrimaryColumn('varchar')
-    userId: string;
+    UserId: string;
   @PrimaryColumn('varchar')
-    gameId: string;
+    GameId: string;
   @PrimaryColumn('varchar')
-    botId: string;
-  @Column({ type: 'int' })
-    score: number;
+    BotId: string;
+  @Column('int', { default: 1500 })
+    Score: number;
+  // 用于获取排名的 column
+  @Column({ select: false })
+    Rank?: number;
 }

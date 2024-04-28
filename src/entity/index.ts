@@ -3,3 +3,4 @@ export * from './auth';
 export * from './bot';
 export * from './game';
 export * from './tape';
+export * from './log';

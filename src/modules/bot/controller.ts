@@ -1,69 +1,73 @@
-import { Body, Controller, Get, Inject, Post, Query, UseGuards } from '@nestjs/common';
-import { OnlyIdDto, CreateDto, DeleteDto, UpdateDto, InnerUpdateStatusDto } from './dtos';
+import { Body, Controller, Inject, Post, UseGuards } from '@nestjs/common';
 import { BotService } from './service';
+import {
+  InnerUpdateStatusRequest,
+  CreateBotRequest,
+  ListBotsRequest, ListBotsResponse, GetBotRequest, UpdateBotRequest, DeleteBotRequest, StartBotRequest, StopBotRequest,
+} from '@/request';
 import { AuthGuard } from '@/modules/auth/guard/auth.guard';
 import { Jwt } from '@/common/decorators';
-import { JwtType } from '@/types';
+import { EmptyObject, JwtType, OnlyIdResponse } from '@/types';
 import { InnerGuard } from '@/modules/auth/guard/inner.guard';
+import { CommonResponseType, RequestOk } from '@/utils';
+import { Bot } from '@/entity';
 
-@Controller('/api/bot')
+@Controller('/api')
 export class BotController {
   @Inject()
     botService: BotService;
 
-  @Post('/create')
   @UseGuards(AuthGuard)
-  async create(@Body() body: CreateDto, @Jwt() jwt: JwtType) {
-    return await this.botService.create(jwt.id, body);
+  @Post('/CreateBot')
+  async createBot(@Jwt() jwt: JwtType, @Body() request: CreateBotRequest): CommonResponseType<OnlyIdResponse> {
+    const { Id } = jwt;
+    const id = await this.botService.createBot(Id, request);
+    return RequestOk({ Id: id });
   }
 
-  @Get('/get')
   @UseGuards(AuthGuard)
-  async get(@Jwt() jwt: JwtType, @Query('pageIndex') pageIndex: number, @Query('pageSize') pageSize: number) {
-    return await this.botService.get(jwt.id, pageIndex, pageSize);
+  @Post('/ListBots')
+  async listBots(@Body() request: ListBotsRequest): CommonResponseType<ListBotsResponse> {
+    return RequestOk(await this.botService.listBots(request));
   }
 
-  @Get('/game')
   @UseGuards(AuthGuard)
-  async game(@Jwt() jwt: JwtType, @Query('gameId') gameId: string) {
-    return {
-      bots: await this.botService.game(jwt.id, gameId),
-    };
+  @Post('/GetBot')
+  async getBot(@Body() request: GetBotRequest): CommonResponseType<Bot> {
+    return RequestOk(await this.botService.getBot(request.Id));
   }
 
-  @Get('/code')
   @UseGuards(AuthGuard)
-  async code(@Jwt() jwt: JwtType, @Query('botId') botId: string) {
-    return await this.botService.code(jwt.id, botId);
+  @Post('/UpdateBot')
+  async updateBot(@Jwt() jwt: JwtType, @Body() request: UpdateBotRequest): CommonResponseType<EmptyObject> {
+    await this.botService.updateBot(jwt.Id, request);
+    return RequestOk({});
   }
 
-  @Post('/update')
   @UseGuards(AuthGuard)
-  async update(@Jwt() jwt: JwtType, @Body() body: UpdateDto) {
-    return await this.botService.update(jwt.id, body);
+  @Post('/DeleteBot')
+  async deleteBot(@Jwt() jwt: JwtType, @Body() request: DeleteBotRequest): CommonResponseType<EmptyObject> {
+    await this.botService.deleteBot(jwt.Id, request.Id);
+    return RequestOk({});
   }
 
-  @Post('/compile')
   @UseGuards(AuthGuard)
-  async compile(@Jwt() jwt: JwtType, @Body() body: OnlyIdDto) {
-    return await this.botService.compile(jwt.id, body.id);
+  @Post('/StartBot')
+  async startBot(@Jwt() jwt: JwtType, @Body() request: StartBotRequest): CommonResponseType<EmptyObject> {
+    await this.botService.startBot(jwt.Id, request.Id);
+    return RequestOk({});
   }
 
-  @Post('/stop')
   @UseGuards(AuthGuard)
-  async stop(@Jwt() jwt: JwtType, @Body() body: OnlyIdDto) {
-    return await this.botService.stop(jwt.id, body.id);
+  @Post('/StopBot')
+  async stopBot(@Jwt() jwt: JwtType, @Body() request: StopBotRequest): CommonResponseType<EmptyObject> {
+    await this.botService.stopBot(jwt.Id, request.Id);
+    return RequestOk({});
   }
 
-  @Post('/delete')
-  @UseGuards(AuthGuard)
-  async delete(@Jwt() jwt: JwtType, @Body() body: DeleteDto) {
-    return await this.botService.delete(jwt.id, body.botId);
-  }
-
-  @Post('/InnerUpdateStatus')
   @UseGuards(InnerGuard)
-  async innerUpdateStatus(@Body() body: InnerUpdateStatusDto) {
-    return await this.botService.innerUpdateStatus(body.containerId, body.status, body.message);
+  @Post('/InnerUpdateBotStatus')
+  async innerUpdateBotStatus(@Body() body: InnerUpdateStatusRequest) {
+    return await this.botService.innerUpdateBotStatus(body.ContainerId, body.Status, body.Message);
   }
 }

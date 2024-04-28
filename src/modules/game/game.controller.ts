@@ -1,48 +1,66 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Inject, Post, UseGuards } from '@nestjs/common';
 import { GameService } from './game.service';
+import {
+  CreateGameRequest,
+  CreateGameResponse, DeleteGameRequest,
+  GetGameRequest,
+  ListGamesRequest,
+  ListGamesResponse,
+  UpdateGameRequest,
+} from '@/request';
 import { Game } from '@/entity';
 import { AdminGuard } from '@/modules/auth/guard/admin.guard';
-import { downloadGame } from '@/utils';
+import { CommonResponseType, downloadGame, RequestOk } from '@/utils';
 
-
-@Controller('/api/game')
+@Controller('/api')
 export class GameController {
   static HAS_DOWNLOAD: boolean;
 
-  gameService: GameService;
+  @Inject()
+    gameService: GameService;
 
   constructor(gameService: GameService) {
     this.gameService = gameService;
     // 运行时下载游戏
     if (GameController.HAS_DOWNLOAD) return ;
     GameController.HAS_DOWNLOAD = true;
-    gameService.getAll()
-      .then(async ({ games }) => {
-        for (const { npmPackage, version } of games) {
-          await downloadGame(npmPackage, version);
+    gameService.listGames({ PageOffset: 0, PageSize: 999 })
+      .then(({ Items }) => {
+        for (const { NpmPackage, Version } of Items) {
+          downloadGame(NpmPackage, Version);
         }
       });
   }
 
-  @Get('/all')
-  async getAll() {
-    return await this.gameService.getAll();
-  }
-
-  @Post('/list')
-  async listGames() {
-    return await this.gameService.listGames();
-  }
-
-  @Post('/create')
   @UseGuards(AdminGuard)
-  async createGame(@Body() body: Game) {
-    return await this.gameService.create(body);
+  @Post('/CreateGame')
+  async createGame(@Body() request: CreateGameRequest): CommonResponseType<CreateGameResponse> {
+    const Id = await this.gameService.createGame(request);
+    return RequestOk({ Id });
   }
 
-  @Post('/delete')
+  @Post('/ListGames')
+  async listGames(@Body() request: ListGamesRequest): CommonResponseType<ListGamesResponse> {
+    return RequestOk(await this.gameService.listGames(request));
+  }
+
+  @Post('/GetGame')
+  async getGame(@Body() request: GetGameRequest): CommonResponseType<Game> {
+    const game = await this.gameService.getGame(request.Id);
+    return RequestOk(game);
+  }
+
   @UseGuards(AdminGuard)
-  async deleteGame(@Body() body: Pick<Game, 'id'>) {
-    return await this.gameService.delete(body.id);
+  @Post('/UpdateGame')
+  async updateGame(@Body() request: UpdateGameRequest): CommonResponseType {
+    await this.gameService.updateGame(request);
+    return RequestOk({});
+  }
+
+  @UseGuards(AdminGuard)
+  @Post('/DeleteGame')
+  async deleteGame(@Body() body: DeleteGameRequest): CommonResponseType {
+    await this.gameService.deleteGame(body.Id);
+    return RequestOk({});
   }
 }

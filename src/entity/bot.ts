@@ -4,39 +4,29 @@ import { BotStatus } from '@/types';
 @Entity()
 export class Bot {
   @PrimaryColumn('varchar')
-    id: string;
-  // 所属游戏
+    Id: string;
   @Column('varchar')
-    gameId: string;
-  // 语言
+    Name: string;
+  @Column('text', { nullable: true })
+    Description: string;
   @Column('varchar')
-    langId: string;
-  // 所属用户
+    GameId: string;
   @Column('varchar')
-    userId: string;
-  // 名字
-  @Column('varchar')
-    name: string;
-  // 描述
+    Lang: string;
   @Column('text')
-    description: string;
+    Code: string;
   @CreateDateColumn()
-    createTime: Date;
-  // 是否公开
-  @Column('boolean')
-    isPublic: boolean;
-  // 代码
-  @Column('text')
-    code: string;
+    CreateTime: Date;
   @Column({
     type: 'enum',
     enum: BotStatus,
     default: BotStatus.Hibernating,
   })
-    status: BotStatus;
+    Status: BotStatus;
+  @Column('text', { nullable: true })
+    StatusMessage?: string;
   @Column('varchar', { nullable: true })
-    containerId?: string;
-
-  @Column('varchar', { nullable: true })
-    statusMessage?: string;
+    ContainerId?: string;
+  @Column('varchar')
+    UserId: string;
 }

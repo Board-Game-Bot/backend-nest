@@ -38,7 +38,7 @@ export class NetworkServerController extends GamePlugin {
 
     bots.forEach((b, i) => {
       if (!b) return ;
-      const containerId = b.containerId;
+      const containerId = b.ContainerId;
       let isMyTurn = false;
 
       // step if bot exists

@@ -1,138 +1,74 @@
-import { Injectable, Query } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { pick } from 'lodash';
+import { CreateRateRequest, GetRateRequest, ListRatesRequest, OnlyRateId, UpdateRateRequest } from '@/request';
 import { Rate } from '@/entity/rate';
+import { RequestFail } from '@/utils';
 
 @Injectable()
 export class RateService {
   @InjectRepository(Rate)
     rateDao: Repository<Rate>;
 
-  async get(
-    @Query('gameId') gameId: string,
-    @Query('pageIndex') pageIndex: number,
-    @Query('pageSize') pageSize: number,
-  ) {
-    try {
-      return {
-        rates: await this.rateDao.find({
-          where: {
-            gameId,
-          },
-          order: {
-            score: 'DESC',
-          },
-          skip: pageIndex * pageSize,
-          take: pageSize,
-        }),
-      };
+  async createRate(request: CreateRateRequest) {
+    if (await this.isExist(request)) {
+      RequestFail('The Rate already exists.');
     }
-    catch (e) {
-      console.log(e);
-      throw new Error('get rates error.');
-    }
+    await this.rateDao.save(pick(request, ['BotId', 'UserId', 'GameId', 'Score']));
+    return pick(request, ['UserId', 'GameId', 'BotId']);
   }
 
-  /**
-   * 创建
-   * @param userId
-   * @param gameId
-   * @param botId
-   */
-  async createRate(
-    userId: string,
-    gameId: string,
-    botId?: string,
-  ) {
-    try {
-      return this.rateDao.save({
-        userId,
-        gameId,
-        botId: botId ?? 'person',
-        score: 1500,
-      });
+  async getRate(request: GetRateRequest) {
+    if (!await this.isExist(request)) {
+      RequestFail('The Rate does not exist.');
     }
-    catch {
-      throw new Error('create rate error');
-    }
+    return await this.rateDao.findOneBy(pick(request, ['BotId', 'UserId', 'GameId']));
   }
 
-  /**
-   * 查找
-   * @param userId
-   * @param gameId
-   * @param botId
-   */
-  async findRate(
-    userId: string,
-    gameId: string,
-    botId?: string,
-  ) {
-    const foundRate = await this.rateDao.findOneBy({
-      userId,
-      gameId,
-      botId: botId ?? 'person',
+  async listRates(request: ListRatesRequest) {
+    const { PageOffset, PageSize, WithRank } = request;
+    const filter = request.Filter ?? {};
+    const q = this.rateDao.createQueryBuilder('rate');
+    q.addOrderBy('rate.Score', 'DESC');
+
+    if (filter.GameIds?.length > 0) {
+      q.andWhere('rate.GameId IN (:...GameIds)', filter);
+    }
+    if (filter.UserIds?.length > 0) {
+      q.andWhere('rate.UserId IN (:...UserIds)', filter);
+    }
+    if (filter.BotIds?.length > 0) {
+      q.andWhere('rate.BotId IN (:...BotIds)', filter);
+    }
+    if (WithRank) {
+      q.addSelect('ROW_NUMBER() OVER (PARTITION BY rate.GameId ORDER BY rate.Score DESC) AS `rate_Rank`');
+    }
+    q.skip(PageOffset).take(PageSize);
+    const [items, totalCount] = await q.getManyAndCount();
+    return {
+      Items: items,
+      TotalCount: totalCount,
+    };
+  }
+
+  async updateRate(request: UpdateRateRequest) {
+    const { UserId, GameId, BotId, Score } = request;
+    if (!await this.isExist({ UserId, GameId, BotId })) {
+      RequestFail('The Rate does not exist.');
+    }
+    await this.rateDao.update({ UserId, GameId, BotId }, {
+      Score,
+      UserId,
+      GameId,
+      BotId,
     });
-    if (foundRate)
-      return foundRate;
-
-    // 找不到就创建一个
-    return await this.createRate(
-      userId,
-      gameId,
-      botId,
-    );
   }
 
-  /**
-   * 更新
-   * @param userId
-   * @param gameId
-   * @param botId
-   * @param score
-   */
-  async updateRate(
-    userId: string,
-    gameId: string,
-    botId: string | undefined,
-    score: number,
-  ) {
-    try {
-      const rate = await this.findRate(
-        userId,
-        gameId,
-        botId,
-      );
-      await this.rateDao.update(rate, { score });
-      return ;
-    }
-    catch (e) {
-      console.log(e);
-      throw new Error('update rate error');
-    }
-  }
 
-  /**
-   * 删除
-   * @param userId
-   * @param gameId
-   * @param botId
-   */
-  async deleteRate(
-    userId: string,
-    gameId: string,
-    botId?: string,
-  ) {
-    try {
-      await this.rateDao.delete({
-        userId,
-        gameId,
-        botId: botId ?? 'person',
-      });
-      return ;
-    }
-    catch {
-      throw new Error('delete rate error');
-    }
+  async isExist(request: OnlyRateId) {
+    return await this.rateDao.exist({
+      where: pick(request, ['UserId', 'GameId', 'BotId']),
+    });
   }
 }
