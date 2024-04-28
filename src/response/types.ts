@@ -1,4 +1,4 @@
-import { IsInt, IsNumberString } from 'class-validator';
+import { IsInt } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export enum ResponseResult {

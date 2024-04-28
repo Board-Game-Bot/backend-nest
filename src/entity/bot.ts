@@ -23,7 +23,7 @@ export class Bot {
     default: BotStatus.Hibernating,
   })
     Status: BotStatus;
-  @Column('varchar', { nullable: true })
+  @Column('text', { nullable: true })
     StatusMessage?: string;
   @Column('varchar', { nullable: true })
     ContainerId?: string;

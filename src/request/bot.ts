@@ -26,7 +26,7 @@ export class CreateBotRequest {
 
 export class ListBotsFilter {
   GameIds?: string[];
-  Langs?: string;
+  Langs?: string[];
   Statuses?: BotStatus[];
   UserIds?: string[];
 }

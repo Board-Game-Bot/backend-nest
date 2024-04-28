@@ -121,15 +121,10 @@ export class BotService {
   }
 
   async innerUpdateBotStatus(containerId: string, status: BotStatus, message?: string): Promise<void> {
-    try {
-      await this.botDao.update({ ContainerId: containerId }, {
-        Status: status,
-        StatusMessage: message,
-      });
-    }
-    catch {
-      throw new Error('update bot status error') ;
-    }
+    await this.botDao.update({ ContainerId: containerId }, {
+      Status: status,
+      StatusMessage: message?.slice(0, 1000),
+    });
   }
 
   async isPermitted(userId: string, id: string) {
