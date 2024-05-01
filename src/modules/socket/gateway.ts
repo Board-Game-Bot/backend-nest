@@ -9,20 +9,24 @@ import {
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { Inject, Injectable } from '@nestjs/common';
-import { pick } from 'lodash';
-import { CreatePreRoomReq, JoinLiveReq, JoinMatchReq, JoinPreRoomReq } from './dtos';
-import { GET_SOCKET_SERVER, SET_SOCKET_SERVER } from './constants';
+import { CreatePreRoomReq, JoinLiveReq, JoinMatchRequest, JoinPreRoomReq } from './dtos';
 import { Client } from './clazz';
 import { MatchPoolService } from './match-pool.service';
 import { Room } from './Room';
 import { CustomModeService } from './custom-mode.service';
 import { PreRoomEvent } from './types';
+import { addSocket, IdMap, removeSocket } from './socket-map';
+import { SocketRequest, SocketResponse } from './message';
 import { RateService } from '@/modules/rate/service';
+import { BotService } from '@/modules/bot/service';
+import { GameService } from '@/modules/game/game.service';
+import { BotStatus } from '@/types';
+import { MatchPools } from '@/modules/socket/match';
 
 @Injectable()
 @WebSocketGateway({
   cors: { origin: '*' },
-  namespace: 'ws',
+  namespace: 'WebSocket',
 })
 export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -32,27 +36,19 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @Inject()
     rateService: RateService;
   @Inject()
+    botService: BotService;
+  @Inject()
     matchPoolService: MatchPoolService;
+  @Inject()
+    gameService: GameService;
 
-  timerMap: Map<Socket, NodeJS.Timer> = new Map<Socket, NodeJS.Timer>();
+  match: MatchPools = new MatchPools();
 
   handleConnection(socket: Socket): any {
-    // 单例服务器
-    if (!GET_SOCKET_SERVER())
-      SET_SOCKET_SERVER(this.server);
-
     try {
-      // success
       const jwt = socket.request.headers['x-jwt'] as string;
-      const { id } = this.jwtService.verify(jwt);
-
-      new Client(socket, id);
-
-      this.timerMap.set(socket, setInterval(() => {
-        socket.emit('lives', {
-          rooms: [...Room.IdMap.values()].map(room => pick(room, ['roomId', 'players'])),
-        });
-      }, 1000));
+      const { Id } = this.jwtService.verify(jwt);
+      addSocket(Id, socket);
     }
     catch {
       // failed
@@ -61,31 +57,53 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   handleDisconnect(socket: Socket): any {
-    const client = Client.IdMap.get(socket);
-    client.disconnect();
-    this.matchPoolService.tryToRemovePlayer(client.playerId);
-
-    clearInterval(this.timerMap.get(socket));
-    this.timerMap.delete(socket);
+    removeSocket(socket);
   }
 
-  @SubscribeMessage('join-match')
+  @SubscribeMessage(SocketRequest.JoinMatchRequest)
   async joinMatch(
-    @MessageBody() body: JoinMatchReq,
+    @MessageBody() body: JoinMatchRequest,
     @ConnectedSocket() socket: Socket,
   ) {
-    const { gameId, botId } = body;
-    const client = Client.IdMap.get(socket);
-    const score = await this.getScore(gameId, client.playerId, botId);
-    const result = this.matchPoolService.tryToAddPlayer(
-      gameId,
-      client.playerId,
-      score.Score,
-      botId,
-      socket,
-    );
+    const { GameId, BotId = '' } = body;
+    const UserId = IdMap.get(socket);
+    // validate game and bot
+    if (BotId) {
+      if (!await this.botService.isPermitted(UserId, BotId)) {
+        socket.emit(SocketResponse.JoinMatchErrorResponse, 'The Bot does not exist.');
+        return;
+      }
+      const bot = await this.botService.getBot(BotId);
+      if (bot.Status !== BotStatus.Working) {
+        socket.emit(SocketResponse.JoinMatchErrorResponse, 'The Bot is not working.');
+        return;
+      }
+      if (bot.GameId !== GameId) {
+        socket.emit(SocketResponse.JoinMatchErrorResponse, 'The Bot game is not supported.');
+        return ;
+      }
+    }
+    if (!await this.gameService.getGame(GameId)) {
+      socket.emit(SocketResponse.JoinMatchErrorResponse, 'The Game does not exist.');
+      return;
+    }
+    // Join Match
+    const match = this.match;
+    const rate = await this.rateService.getOrCreateRate({ UserId, GameId, BotId });
 
-    result && socket.emit('join-match') ;
+    // Should Leave Events
+    const addOk = match.AddUser(GameId, rate);
+    if (!addOk) {
+      return ;
+    }
+    const events = ['disconnect', SocketRequest.LeaveMatchRequest];
+    const handler = () => {
+      match.DelUser(GameId, rate);
+      events.forEach(event => socket.off(event, handler));
+    };
+    events.forEach(event => {
+      socket.on(event, handler);
+    });
   }
 
   // 自定义模式
@@ -127,13 +145,5 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const playerId = Client.IdMap.get(socket).playerId;
     room.join(playerId, socket);
-  }
-
-  async getScore(gameId: string, playerId: string, botId?: string) {
-    return await this.rateService.getRate({
-      UserId: playerId,
-      GameId: gameId,
-      BotId: botId ?? '',
-    });
   }
 }

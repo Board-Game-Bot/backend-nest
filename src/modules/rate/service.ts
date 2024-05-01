@@ -65,10 +65,16 @@ export class RateService {
     });
   }
 
-
   async isExist(request: OnlyRateId) {
     return await this.rateDao.exist({
       where: pick(request, ['UserId', 'GameId', 'BotId']),
     });
+  }
+
+  async getOrCreateRate(request: OnlyRateId) {
+    if (!await this.isExist(request)) {
+      await this.createRate(request);
+    }
+    return await this.getRate(request);
   }
 }

@@ -1,8 +1,8 @@
 import { Player } from '@/modules/socket/types';
 
-export interface JoinMatchReq {
-  gameId: string;
-  botId?: string;
+export interface JoinMatchRequest {
+  GameId: string;
+  BotId?: string;
 }
 
 export interface JoinMatchRes {}
