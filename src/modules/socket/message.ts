@@ -1,8 +1,15 @@
 export enum SocketRequest {
     JoinMatchRequest = 'JoinMatchRequest',
-    LeaveMatchRequest = 'LeaveMatchRequest'
+    JoinRoomRequest = 'JoinRoomRequest',
+    MakeRoomRequest = 'MakeRoomRequest',
+    LeaveMatchRequest = 'LeaveMatchRequest',
+    ReadyRequest = 'ReadyRequest',
 }
 
 export enum SocketResponse {
-    JoinMatchErrorResponse = 'JoinMatchErrorResponse'
+    JoinMatchErrorResponse = 'JoinMatchErrorResponse',
+    JoinRoomErrorResponse = 'JoinRoomErrorResponse',
+    MakeRoomResponse = 'MakeRoomResponse',
+    MakeRoomErrorResponse = 'MakeRoomErrorResponse',
+    SyncRoomResponse = 'SyncRoomResponse',
 }

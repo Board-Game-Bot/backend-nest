@@ -1,7 +1,8 @@
 import {
   ConnectedSocket,
   MessageBody,
-  OnGatewayConnection, OnGatewayDisconnect,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -9,19 +10,23 @@ import {
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { Inject, Injectable } from '@nestjs/common';
-import { CreatePreRoomReq, JoinLiveReq, JoinMatchRequest, JoinPreRoomReq } from './dtos';
-import { Client } from './clazz';
-import { MatchPoolService } from './match-pool.service';
-import { Room } from './Room';
-import { CustomModeService } from './custom-mode.service';
-import { PreRoomEvent } from './types';
+import {
+  JoinMatchRequest,
+  JoinRoomRequest,
+  MakeRoomRequest,
+  ReadyRequest,
+} from './dtos';
+import { Participant, RoomManager } from './room';
+import { GameMode } from './types';
 import { addSocket, IdMap, removeSocket } from './socket-map';
 import { SocketRequest, SocketResponse } from './message';
+import { fall } from './fall';
 import { RateService } from '@/modules/rate/service';
 import { BotService } from '@/modules/bot/service';
 import { GameService } from '@/modules/game/game.service';
 import { BotStatus } from '@/types';
 import { MatchPools } from '@/modules/socket/match';
+import { UserService } from '@/modules/user/user.service';
 
 @Injectable()
 @WebSocketGateway({
@@ -38,15 +43,21 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @Inject()
     botService: BotService;
   @Inject()
-    matchPoolService: MatchPoolService;
-  @Inject()
     gameService: GameService;
+  @Inject()
+    userService: UserService;
 
-  match: MatchPools = new MatchPools();
+  @Inject()
+    room: RoomManager;
 
-  handleConnection(socket: Socket): any {
+  @Inject()
+    match: MatchPools;
+
+  async handleConnection(socket: Socket) {
     try {
-      const jwt = socket.request.headers['x-jwt'] as string;
+      // Basic Connection
+      const headers = socket.request.headers;
+      const jwt = headers['x-jwt'] as string;
       const { Id } = this.jwtService.verify(jwt);
       addSocket(Id, socket);
     }
@@ -65,28 +76,19 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() body: JoinMatchRequest,
     @ConnectedSocket() socket: Socket,
   ) {
-    const { GameId, BotId = '' } = body;
+    const { GameId, BotId = '' } = fall(body);
     const UserId = IdMap.get(socket);
     // validate game and bot
-    if (BotId) {
-      if (!await this.botService.isPermitted(UserId, BotId)) {
-        socket.emit(SocketResponse.JoinMatchErrorResponse, 'The Bot does not exist.');
-        return;
-      }
-      const bot = await this.botService.getBot(BotId);
-      if (bot.Status !== BotStatus.Working) {
-        socket.emit(SocketResponse.JoinMatchErrorResponse, 'The Bot is not working.');
-        return;
-      }
-      if (bot.GameId !== GameId) {
-        socket.emit(SocketResponse.JoinMatchErrorResponse, 'The Bot game is not supported.');
-        return ;
-      }
+    const message = await this.checkBotId(UserId, BotId, GameId);
+    if (message) {
+      socket.emit(SocketResponse.JoinMatchErrorResponse, message);
+      return ;
     }
     if (!await this.gameService.getGame(GameId)) {
       socket.emit(SocketResponse.JoinMatchErrorResponse, 'The Game does not exist.');
       return;
     }
+
     // Join Match
     const match = this.match;
     const rate = await this.rateService.getOrCreateRate({ UserId, GameId, BotId });
@@ -106,44 +108,80 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
-  // 自定义模式
-  @Inject()
-    customModeService: CustomModeService;
-  @SubscribeMessage(PreRoomEvent.CreatePreRoom)
-  createPreRoom(
-    @MessageBody() body: CreatePreRoomReq,
+  @SubscribeMessage(SocketRequest.JoinRoomRequest)
+  async joinRoom(
+    @MessageBody() body: JoinRoomRequest,
     @ConnectedSocket() socket: Socket,
   ) {
-    this.customModeService.create(socket, body.gameId);
-  }
+    const { RoomId, BotId = '', IsPlayer = false } = fall(body);
+    const UserId = IdMap.get(socket);
 
-  @SubscribeMessage(PreRoomEvent.JoinPreRoom)
-  joinPreRoom(
-    @MessageBody() body: JoinPreRoomReq,
-    @ConnectedSocket() socket: Socket,
-  ) {
-    this.customModeService.join(socket, body.roomId, body.gameId);
-  }
+    const room = this.room.Map.get(RoomId);
+    if (!room) {
+      socket.emit(SocketResponse.JoinRoomErrorResponse, 'The room does not exist.');
+      return;
+    }
+    const { Game: { Id: GameId } } = room;
+    const message = await this.checkBotId(UserId, BotId, GameId);
+    if (message) {
+      socket.emit(SocketResponse.JoinRoomErrorResponse, message);
+      return ;
+    }
+    const participant: Participant = {
+      User: await this.userService.getUser(UserId),
+      Socket: socket,
+    };
+    if (BotId) {
+      participant.Bot = await this.botService.getBot(BotId);
+    }
 
-  @SubscribeMessage('join-live')
-  joinLive(
-    @MessageBody() body: JoinLiveReq,
-    @ConnectedSocket() socket: Socket,
-  ) {
-    const { roomId } = body;
-    const room = Room.IdMap.get(roomId);
-    if (!room) return ;
-
-    socket.emit('load-sync', {
-      room: {
-        roomId,
-        players: room.players,
-        gameId: room.gameId,
-      },
-      ...room.game,
+    const roomManager = this.room;
+    roomManager.JoinRoom(RoomId, participant, IsPlayer);
+    socket.on('disconnect', function handleLeave() {
+      roomManager.LeaveRoom(RoomId, participant);
+      socket.off('disconnect', handleLeave);
     });
+  }
 
-    const playerId = Client.IdMap.get(socket).playerId;
-    room.join(playerId, socket);
+  @SubscribeMessage(SocketRequest.MakeRoomRequest)
+  async makeRoom(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() body: MakeRoomRequest,
+  ) {
+    const { RoomId, GameId } = fall(body);
+    const game = this.match.Games.find(game => game.Id === GameId);
+    if (!game) {
+      socket.emit(SocketResponse.MakeRoomErrorResponse, 'The game does not exists.');
+      return ;
+    }
+
+    const id = this.room.MakeRoom(game, GameMode.Custom, RoomId);
+    socket.emit(SocketResponse.MakeRoomResponse, id);
+  }
+
+  @SubscribeMessage(SocketRequest.ReadyRequest)
+  async ready(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() body: ReadyRequest,
+  ) {
+    const { RoomId } = fall(body);
+    const UserId = IdMap.get(socket);
+    this.room.Ready(RoomId, UserId);
+  }
+
+  async checkBotId(UserId: string, BotId: string, GameId: string): Promise<string> {
+    if (BotId) {
+      if (!await this.botService.isPermitted(UserId, BotId)) {
+        return 'The Bot does not exist.';
+      }
+      const bot = await this.botService.getBot(BotId);
+      if (bot.Status !== BotStatus.Working) {
+        return 'The Bot is not working.';
+      }
+      if (bot.GameId !== GameId) {
+        return 'The Bot game is not supported.';
+      }
+    }
+    return '';
   }
 }

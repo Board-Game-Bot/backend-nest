@@ -37,3 +37,7 @@ export enum PreRoomEvent {
   StartGame = 'StartGame',
 }
 
+export enum GameMode {
+  Match = 'Match',
+  Custom = 'Custom',
+}
