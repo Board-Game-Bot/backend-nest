@@ -23,5 +23,6 @@ import { RoomManager } from '@/modules/socket/room';
     MatchPools,
     RoomManager,
   ],
+  exports: [SocketGateway],
 })
 export class SocketModule {}

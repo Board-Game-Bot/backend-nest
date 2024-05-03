@@ -1,10 +1,16 @@
 import { Socket } from 'socket.io';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { omit } from 'lodash';
+import { buildGame, Game as SokuGame } from '@soku-games/core';
 import { Bot, Game, User } from '@/entity';
 import { GameMode } from '@/modules/socket/types';
 import { MakeIdGenerator } from '@/utils';
 import { SocketResponse } from '@/modules/socket/message';
+import './plugins';
+import { GameOverRateExtra, NetworkControlExtra, NetworkReadyExtra, NetworkSyncExtra } from '@/modules/socket/plugins';
+import { BotRunService } from '@/modules/botrun/services';
+import { SocketGateway } from '@/modules/socket/gateway';
+import { RateService } from '@/modules/rate/service';
 
 export interface Participant {
     User: User;
@@ -19,6 +25,7 @@ export interface Room {
     Mode: GameMode;
     Players: Participant[];
     Audience: Participant[];
+    SokuGame?: SokuGame;
 }
 
 @Injectable()
@@ -85,18 +92,18 @@ export class RoomManager {
   TurnPlayer(roomId: string, userId: string) {
     const room = this.Map.get(roomId);
     if (!room) {
-      console.log('Turn Failed', roomId);
+      console.log('Turn Failed 1', roomId);
       return ;
     }
-    if (!room.Audience.some(player => player.User.Id === userId)) {
-      console.log('Turn Failed', roomId);
+    const participant = room.Audience.find(audience => audience.User.Id === userId);
+    if (!participant) {
+      console.log('Turn Failed 2', roomId);
       return ;
     }
     if (room.Players.length >= room.Game.PlayerCount) {
-      console.log('Turn Failed', roomId);
+      console.log('Turn Failed 3', roomId);
       return ;
     }
-    const participant = room.Audience.find(audience => audience.User.Id !== participant.User.Id);
     room.Players.push(participant);
     room.Audience = room.Audience.filter(audience => audience !== participant);
     this.SyncRoom(roomId);
@@ -105,14 +112,14 @@ export class RoomManager {
   TurnAudience(roomId: string, userId: string) {
     const room = this.Map.get(roomId);
     if (!room) {
-      console.log('Turn Failed', roomId);
-      return ;
-    }
-    if (!room.Players.some(audience => audience.User.Id === userId)) {
-      console.log('Turn Failed', roomId);
+      console.log('Turn Failed 1', roomId);
       return ;
     }
     const participant = room.Players.find(player => player.User.Id === userId);
+    if (!participant) {
+      console.log('Turn Failed 2', roomId);
+      return ;
+    }
     room.Audience.push(participant);
     room.Players = room.Players.filter(player => player !== participant);
     this.SyncRoom(roomId);
@@ -126,12 +133,17 @@ export class RoomManager {
     const mapOp = (participant: Participant) => omit(participant, ['Socket']);
     participants.forEach(participant => {
       participant.Socket.emit(SocketResponse.SyncRoomResponse, {
-        ...room,
+        ...omit(room, ['SokuGame']),
         Players: room.Players.map(mapOp),
         Audience: room.Audience.map(mapOp),
       });
     });
   }
+
+  @Inject()
+    botRunService: BotRunService;
+  @Inject()
+    rateService: RateService;
 
   Ready(roomId: string, userId: string) {
     const room = this.Map.get(roomId);
@@ -152,7 +164,39 @@ export class RoomManager {
     if (room.Players.some(player => !player.IsReady)) {
       return ;
     }
-    // TODO: Start Game
-    console.log('Start Game');
+    room.SokuGame = buildGame({
+      name: room.Game.Id,
+      plugins: [
+        `${room.Game.Id}-validator`,
+        {
+          name: 'NetworkReady',
+          extra: <NetworkReadyExtra>{
+            Room: room,
+            Server: SocketGateway.Server,
+          },
+        },
+        {
+          name: 'NetworkSync',
+          extra: <NetworkSyncExtra>{
+            Room: room,
+            Server: SocketGateway.Server,
+          },
+        },
+        {
+          name: 'NetworkControl',
+          extra: <NetworkControlExtra>{
+            Room: room,
+            BotRunService: this.botRunService,
+          },
+        },
+        {
+          name: 'GameOverRate',
+          extra: <GameOverRateExtra>{
+            Room: room,
+            RateService: this.rateService,
+          },
+        },
+      ],
+    });
   }
 }

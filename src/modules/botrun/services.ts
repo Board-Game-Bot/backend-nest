@@ -23,4 +23,9 @@ export class BotRunService {
     const payload = { containerId };
     this.api.post('/stop', payload);
   }
+
+  async run(containerId: string, input: string) {
+    const payload = { containerId, input };
+    return (await this.api.post('/run', payload)).data?.output ?? '';
+  }
 }

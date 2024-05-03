@@ -4,6 +4,8 @@ export enum SocketRequest {
     MakeRoomRequest = 'MakeRoomRequest',
     LeaveMatchRequest = 'LeaveMatchRequest',
     ReadyRequest = 'ReadyRequest',
+    TurnPlayerRequest = 'TurnPlayerRequest',
+    TurnAudienceRequest = 'TurnAudienceRequest'
 }
 
 export enum SocketResponse {

@@ -14,6 +14,7 @@ import {
   JoinMatchRequest,
   JoinRoomRequest,
   MakeRoomRequest,
+  OnlyRoomIdRequest,
   ReadyRequest,
 } from './dtos';
 import { Participant, RoomManager } from './room';
@@ -28,12 +29,13 @@ import { BotStatus } from '@/types';
 import { MatchPools } from '@/modules/socket/match';
 import { UserService } from '@/modules/user/user.service';
 
-@Injectable()
 @WebSocketGateway({
   cors: { origin: '*' },
   namespace: 'WebSocket',
 })
 export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  static Server: Server;
+
   @WebSocketServer()
     server: Server;
   @Inject()
@@ -54,6 +56,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     match: MatchPools;
 
   async handleConnection(socket: Socket) {
+    SocketGateway.Server = this.server;
     try {
       // Basic Connection
       const headers = socket.request.headers;
@@ -137,8 +140,10 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const roomManager = this.room;
     roomManager.JoinRoom(RoomId, participant, IsPlayer);
+    socket.join(RoomId);
     socket.on('disconnect', function handleLeave() {
       roomManager.LeaveRoom(RoomId, participant);
+      socket.leave(RoomId);
       socket.off('disconnect', handleLeave);
     });
   }
@@ -167,6 +172,27 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const { RoomId } = fall(body);
     const UserId = IdMap.get(socket);
     this.room.Ready(RoomId, UserId);
+  }
+
+
+  @SubscribeMessage(SocketRequest.TurnPlayerRequest)
+  async turnPlayer(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() body: OnlyRoomIdRequest,
+  ) {
+    const { RoomId } = fall(body);
+    const UserId = IdMap.get(socket);
+    this.room.TurnPlayer(RoomId, UserId);
+  }
+
+  @SubscribeMessage(SocketRequest.TurnAudienceRequest)
+  async turnAudience(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() body: OnlyRoomIdRequest,
+  ) {
+    const { RoomId } = fall(body);
+    const UserId = IdMap.get(socket);
+    this.room.TurnAudience(RoomId, UserId);
   }
 
   async checkBotId(UserId: string, BotId: string, GameId: string): Promise<string> {
