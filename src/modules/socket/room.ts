@@ -89,15 +89,10 @@ export class RoomManager {
     }
   }
 
-  TurnPlayer(roomId: string, userId: string) {
+  TurnPlayer(roomId: string, participant: Participant) {
     const room = this.Map.get(roomId);
     if (!room) {
       console.log('Turn Failed 1', roomId);
-      return ;
-    }
-    const participant = room.Audience.find(audience => audience.User.Id === userId);
-    if (!participant) {
-      console.log('Turn Failed 2', roomId);
       return ;
     }
     if (room.Players.length >= room.Game.PlayerCount) {
@@ -105,7 +100,7 @@ export class RoomManager {
       return ;
     }
     room.Players.push(participant);
-    room.Audience = room.Audience.filter(audience => audience !== participant);
+    room.Audience = room.Audience.filter(audience => audience.User.Id !== participant.User.Id);
     this.SyncRoom(roomId);
   }
 
@@ -121,7 +116,7 @@ export class RoomManager {
       return ;
     }
     room.Audience.push(participant);
-    room.Players = room.Players.filter(player => player !== participant);
+    room.Players = room.Players.filter(player => player.User.Id !== participant.User.Id);
     this.SyncRoom(roomId);
   }
 
@@ -151,12 +146,13 @@ export class RoomManager {
       console.log('The room does not exist.');
       return ;
     }
-    const player = room.Players.find(player => player.User.Id === userId);
-    if (!player) {
+    const players = room.Players.filter(player => player.User.Id === userId);
+    if (!players.length) {
       console.log('The player does not exist.');
       return ;
     }
-    player.IsReady = !player.IsReady;
+    const isReady = !players[0].IsReady;
+    players.forEach(player => player.IsReady = isReady);
     this.SyncRoom(roomId);
     if (room.Players.length !== room.Game.PlayerCount) {
       return ;
