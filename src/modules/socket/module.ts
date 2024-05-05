@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SocketGateway } from './gateway';
-import { OnlineGameService } from './online-game.service';
 import { Rate } from '@/entity/rate';
 import { RateService } from '@/modules/rate/service';
 import { BotService } from '@/modules/bot/service';
@@ -17,7 +16,6 @@ import { RoomManager } from '@/modules/socket/room';
   providers: [
     SocketGateway,
     GameService,
-    OnlineGameService,
     RateService,
     BotService,
     MatchPools,
