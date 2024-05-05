@@ -18,6 +18,10 @@ export interface ReadyRequest {
   RoomId: string;
 }
 
+export interface TurnPlayerRequest extends OnlyRoomIdRequest{
+  BotId?: string;
+}
+
 export interface OnlyRoomIdRequest {
   RoomId: string;
 }

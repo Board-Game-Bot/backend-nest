@@ -16,6 +16,7 @@ import {
   MakeRoomRequest,
   OnlyRoomIdRequest,
   ReadyRequest,
+  TurnPlayerRequest,
 } from './dtos';
 import { Participant, RoomManager } from './room';
 import { GameMode } from './types';
@@ -178,11 +179,24 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage(SocketRequest.TurnPlayerRequest)
   async turnPlayer(
     @ConnectedSocket() socket: Socket,
-    @MessageBody() body: OnlyRoomIdRequest,
+    @MessageBody() body: TurnPlayerRequest,
   ) {
-    const { RoomId } = fall(body);
+    const { RoomId, BotId = '' } = fall(body);
     const UserId = IdMap.get(socket);
-    this.room.TurnPlayer(RoomId, UserId);
+    const GameId = this.room.Map.get(RoomId).Game.Id;
+
+    if (BotId && await this.checkBotId(UserId, BotId, GameId)) {
+      return ;
+    }
+
+    const participant: Participant = {
+      User: await this.userService.getUser(UserId),
+      Socket: socket,
+    };
+    if (BotId) {
+      participant.Bot = await this.botService.getBot(BotId);
+    }
+    this.room.TurnPlayer(RoomId, participant);
   }
 
   @SubscribeMessage(SocketRequest.TurnAudienceRequest)
