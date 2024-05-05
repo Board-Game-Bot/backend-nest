@@ -23,7 +23,12 @@ export class RateService {
     if (!await this.isExist(request)) {
       RequestFail('The Rate does not exist.');
     }
-    return await this.rateDao.findOneBy(pick(request, ['BotId', 'UserId', 'GameId']));
+    const q = this.rateDao.createQueryBuilder('rate');
+    q.addSelect('ROW_NUMBER() OVER (PARTITION BY rate.GameId ORDER BY rate.Score DESC) as `rate_Rank`')
+      .andWhere('rate.BotId = :BotId', request)
+      .andWhere('rate.UserId = :UserId', request)
+      .andWhere('rate.GameId = :GameId', request);
+    return await q.getOne();
   }
 
   async listRates(request: ListRatesRequest) {
