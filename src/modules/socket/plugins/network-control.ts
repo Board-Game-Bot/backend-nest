@@ -29,7 +29,7 @@ export class NetworkControlPlugin extends GamePlugin {
         game.subscribe(LifeCycle.AFTER_END, () => isGameOver = true);
         game.subscribe([LifeCycle.AFTER_START, LifeCycle.AFTER_STEP], async () => {
           if (isGameOver) return ;
-          if (game.data.turn !== index || game.isAllowed()) return ;
+          if (game.data.turn !== index || !game.isAllowed()) return ;
           // Delay to perf
           await sleep(100);
           const input = `${index} ${game.toString()}`;
