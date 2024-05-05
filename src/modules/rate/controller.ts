@@ -27,7 +27,7 @@ export class RateController {
 
   @Post('/GetRate')
   async getRate(@Body() request: GetRateRequest): CommonResponseType<Rate> {
-    return RequestOk(await this.rateService.getRate(request));
+    return RequestOk(await this.rateService.getOrCreateRate(request));
   }
 
   @Post('/ListRates')
