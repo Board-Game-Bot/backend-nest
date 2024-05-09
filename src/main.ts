@@ -1,7 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { useContainer } from 'class-validator';
 import { AppModule } from './app.module';
-import './soku-games';
 import {
   AuthorizationValidationErrorFilter,
   BusinessErrorFilter,

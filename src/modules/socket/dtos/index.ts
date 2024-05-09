@@ -1,57 +1,27 @@
-import { Player } from '@/modules/socket/types';
-
-export interface JoinMatchReq {
-  gameId: string;
-  botId?: string;
+export interface JoinMatchRequest {
+  GameId: string;
+  BotId?: string;
 }
 
-export interface JoinMatchRes {}
-
-export interface LeaveMatchReq {
-  gameId: string;
+export interface JoinRoomRequest {
+  IsPlayer?: boolean;
+  RoomId: string;
+  BotId?: string;
 }
 
-export interface LeaveMatchRes {}
-
-export interface MakeRoomRes {
-  players: Player[];
-  roomId: string;
+export interface MakeRoomRequest {
+  GameId: string;
+  RoomId?: string;
 }
 
-export interface LeaveRoomRes {}
-
-export interface ChatReq {
-  content: string;
+export interface ReadyRequest {
+  RoomId: string;
 }
 
-export interface ChatRes {
-  content: string;
-  playerId: string;
-  time: string;
+export interface TurnPlayerRequest extends OnlyRoomIdRequest{
+  BotId?: string;
 }
 
-export interface PrepareReq {
-  isPrepare: boolean;
-}
-
-export interface PrepareRes {
-  prepareStatus: boolean[];
-}
-
-export interface CreatePreRoomReq {
-  gameId: string;
-}
-
-export interface JoinPreRoomReq {
-  roomId: string;
-  gameId: string;
-}
-
-export interface SeatPreRoomReq {
-  index: number;
-  botId: string;
-}
-
-export interface JoinLiveReq {
-  roomId: string;
+export interface OnlyRoomIdRequest {
+  RoomId: string;
 }

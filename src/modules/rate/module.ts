@@ -12,5 +12,6 @@ import { Rate } from '@/entity/rate';
   ],
   providers: [RateService],
   controllers: [RateController],
+  exports: [RateService],
 })
 export class RateModule {}

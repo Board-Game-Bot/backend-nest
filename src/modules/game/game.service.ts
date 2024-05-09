@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UpdateGameRequest } from '@/request';
+import { ListGamesRequest, UpdateGameRequest } from '@/request';
 import { Game } from '@/entity/game';
 
 @Injectable()
@@ -14,7 +14,7 @@ export class GameService {
     return game.Id;
   }
 
-  async listGames(request: any) {
+  async listGames(request: ListGamesRequest) {
     const { PageOffset, PageSize } = request;
     const itemsPromise = this.gameDao.find({
       skip: PageOffset,
